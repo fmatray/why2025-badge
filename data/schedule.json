@@ -1,0 +1,77 @@
+{
+  "info": "CjxwPldlbGNvbWUgdG8gQ3liZXIgU2FpeWFuIFZpbGxhZ2UhIEVuam95IGFuZCBiZSByZXNwZWN0ZnVsIHRvIGVhY2ggb3RoZXI8L3A+CgoKCjxwPjwvcD4KCg==",
+  "schedule": [
+    {
+      "sort"   : "1001",
+      "title"   : "Lab: Battle of Saiyan",
+      "day"     : "1 to 3"             ,
+      "hour"    : "all day"          ,
+      "speaker" : "SkullB0y",
+      "location": "Cyber Saiyan Village"            ,
+      "duration": ""
+    },
+    {
+      "sort"   : "1002",
+      "title": "Hardware: Cyber Saiyan Badge for WHY2025",
+      "day": "1 to 3",
+      "hour": "all day",
+      "speaker": "Cyber Saiyan Team",
+      "location": "Cyber Saiyan Village",
+      "duration": ""
+    },
+    {
+      "sort": "1003",      
+      "title": "Contest: Best Badge Hack",
+      "day": "3",
+      "hour": "16:00",
+      "speaker": "Cyber Saiyan Badge Team",
+      "location": "Cyber Saiyan Village",
+      "duration": "1h"
+    },
+    {
+      "sort": "1004",
+      "title": "Music: Electronic music live set",
+      "day": "TBD",
+      "hour": "TBD",
+      "speaker": "Chrome",
+      "location": "Dome, Milliways Village",
+      "duration": ""
+    },
+    {
+      "sort": "1005",
+      "title": "Talk: My journey into cloud security",
+      "day": "1",
+      "hour": "18:00",
+      "speaker": "Merlos",
+      "location": "Cassiopeia",
+      "duration": "50 min"
+    },
+    {
+      "sort": "1006",
+      "title": "Talk: Summoning Shenron: Building the Cyber Saiyan Badge",
+      "day": "2",
+      "hour": "16:00",
+      "speaker": "Dariomas, Merlos",
+      "location": "Cassiopeia",
+      "duration": "50 min"
+    },
+    {
+      "sort": "1007",
+      "title": "Talk: The shadow of Operational technologies: A journey into the OT security",
+      "day": "2",
+      "hour": "13:00",
+      "speaker": "SkullB0y",
+      "location": "Delphinus",
+      "duration": "50 min"
+    },
+    {
+      "sort": "1008",
+      "title": "Food: Pasta all'Amatriciana",
+      "day": "TBD",
+      "hour": "dinner",
+      "speaker": "Cyber Saiyan Team",
+      "location": "Milliways Village",
+      "duration": ""
+    }
+  ]
+}

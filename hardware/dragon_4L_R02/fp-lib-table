@@ -1,0 +1,7 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "ProPrj_dragon.kicad_pro-4L.kicad_sch_R00_2025-04-12")(type "KiCad")(uri "$(KIPRJMOD)/dragon_4L_R02.pretty")(options "")(descr ""))
+  (lib (name "RomHack")(type "KiCad")(uri "${KIPRJMOD}/RomHack.pretty")(options "")(descr ""))
+  (lib (name "dragon-r2-easyedapro")(type "KiCad")(uri "${KIPRJMOD}/dragon-r2-easyedapro.pretty")(options "")(descr ""))
+  (lib (name "dragon-r2")(type "KiCad")(uri "${KIPRJMOD}/dragon-r2.pretty")(options "")(descr ""))
+)

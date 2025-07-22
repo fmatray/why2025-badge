@@ -1,0 +1,24 @@
+{
+    "badge": {
+        "name": ""
+    },
+    "web": {
+        "login": "saiyan"
+    },
+    "ap": {
+        "ssid": "",
+        "password": ""
+    },
+    "sta": {
+        "ssid": "CyberSaiyan-WHY2025",
+        "password": "oFREKETE"
+    },
+    "sync": {
+        "path": "a/why2025"
+    },
+    "display": {
+        "brightness_max": 255,
+        "brightness_mid": 80,
+        "brightness_off": 0
+    }
+}
