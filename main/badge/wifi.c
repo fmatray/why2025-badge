@@ -136,7 +136,11 @@ bool start_wifi_sta()
 
 	wifi_config_t wifi_config = { 0 };
 	snprintf((char*)wifi_config.sta.ssid, SIZEOF(wifi_config.sta.ssid), "%s", STA_WIFI_SSID);
-	snprintf((char*)wifi_config.sta.password, SIZEOF(wifi_config.sta.password), "%s", STA_WIFI_PASSWORD);
+	
+	// Only set password if it's not empty (for open networks)
+	if (strlen(STA_WIFI_PASSWORD) > 0) {
+		snprintf((char*)wifi_config.sta.password, SIZEOF(wifi_config.sta.password), "%s", STA_WIFI_PASSWORD);
+	}
 
 	ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
 	ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
