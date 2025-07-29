@@ -66,10 +66,13 @@ The badge's list, you can see all the badges around in a table view
 The Wi-Fi functionalities
 ![WHY2025 fifth screen](img/screen-5.jpg)
 
-* TURN ON AP
+#### TURN ON AP
+
 Start the AP mode (move up the Dial Wheel Switch) and connect from your PC/phone to the badge AP using SSID and PASS shown; after that you can navigate to http://192.168.4.1  in order to explore more functionalities
 ![WHY2025 AP screen](img/screen-ap.jpg)
-* SYNC SCHEDULE**
+
+#### SYNC SCHEDULE
+
 Start the SYNC mode (move down the Dial Wheel Switch) in order to update the Village schedule; the badge connects to WHY2025 open wi-fi to download the updated schedule from Cyber Saiyan website
 
 ### Sixt Screen
