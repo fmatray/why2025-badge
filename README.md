@@ -68,8 +68,9 @@ The Wi-Fi functionalities
 
 #### TURN ON AP
 
-Start the AP mode (move up the Dial Wheel Switch) and connect from your PC/phone to the badge AP using SSID and PASS shown; after that you can navigate to http://192.168.4.1  in order to explore more functionalities
+Start the AP mode (move up the Dial Wheel Switch) and connect from your PC/phone to the badge AP using SSID and PASS shown; after that you can navigate to `http://192.168.4.1` in order to explore more functionalities (hey Harry, can you play tetris?) and change configurations (`saiyan` is the pwd)
 ![WHY2025 AP screen](img/screen-ap.jpg)
+![WHY2025 webserver](img/webserver.jpg)
 
 #### SYNC SCHEDULE
 
