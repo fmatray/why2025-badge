@@ -257,7 +257,7 @@ In the "Project Tasks" view of PIO navigate to:
       * `Upload`
 
 # Known Issues
-* none (yet)
+Check [GitHub issue tracker](https://github.com/CyberSaiyanIT/why2025-badge/issues)
 
 # Misc
 
