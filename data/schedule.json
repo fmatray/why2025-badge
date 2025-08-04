@@ -20,25 +20,7 @@
       "duration": ""
     },
     {
-      "sort": "1003",      
-      "title": "Contest: Best Badge Hack",
-      "day": "3",
-      "hour": "16:00",
-      "speaker": "Cyber Saiyan Badge Team",
-      "location": "Cyber Saiyan Village",
-      "duration": "1h"
-    },
-    {
-      "sort": "1004",
-      "title": "Music: Electronic music live set",
-      "day": "TBD",
-      "hour": "TBD",
-      "speaker": "Chrome",
-      "location": "Dome, Milliways Village",
-      "duration": ""
-    },
-    {
-      "sort": "1005",
+      "sort": "1003",
       "title": "Talk: My journey into cloud security",
       "day": "1",
       "hour": "18:00",
@@ -47,7 +29,16 @@
       "duration": "50 min"
     },
     {
-      "sort": "1006",
+      "sort": "1004",
+      "title": "Talk: The shadow of Operational technologies: A journey into the OT security",
+      "day": "2",
+      "hour": "15:00",
+      "speaker": "SkullB0y",
+      "location": "Delphinus",
+      "duration": "50 min"
+    },
+    {
+      "sort": "1005",
       "title": "Talk: Summoning Shenron: Building the Cyber Saiyan Badge",
       "day": "2",
       "hour": "16:00",
@@ -56,21 +47,39 @@
       "duration": "50 min"
     },
     {
-      "sort": "1007",
-      "title": "Talk: The shadow of Operational technologies: A journey into the OT security",
-      "day": "2",
-      "hour": "13:00",
-      "speaker": "SkullB0y",
-      "location": "Delphinus",
-      "duration": "50 min"
-    },
-    {
-      "sort": "1008",
+      "sort": "1006",
       "title": "Food: Pasta all'Amatriciana",
       "day": "2",
       "hour": "20:00",
       "speaker": "Cyber Saiyan Team",
       "location": "Milliways Village",
+      "duration": ""
+    },
+    {
+      "sort": "1007",      
+      "title": "Contest: Best Badge Hack",
+      "day": "3",
+      "hour": "16:00",
+      "speaker": "Cyber Saiyan Badge Team",
+      "location": "Cyber Saiyan Village",
+      "duration": "1h"
+    },
+    {
+      "sort": "1008",
+      "title": "Talk: Python3-based editors in Burp Suite",
+      "day": "3",
+      "hour": "17:00",
+      "speaker": "Nico",
+      "location": "Cyber Saiyan Village",
+      "duration": "15 min"
+    },
+    {
+      "sort": "1009",
+      "title": "Music: Electronic music live set",
+      "day": "TBD",
+      "hour": "TBD",
+      "speaker": "Chrome",
+      "location": "Dome, Milliways Village",
       "duration": ""
     }
   ]
