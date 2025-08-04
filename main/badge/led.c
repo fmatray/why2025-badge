@@ -1,4 +1,6 @@
 #include "led.h"
+#include "color.h"
+#include "hsv.h"
 
 static const char *TAG = "strip_ws2812";
 
@@ -165,6 +167,53 @@ void set_completed(){
         led_rgb_off(i);
         vTaskDelay(200 / portTICK_PERIOD_MS);
     }
+}
+
+void rainbow() {
+    // Define rainbow colors using HSV for better color representation
+    uint8_t rainbow_hues[7] = {
+        HUE_RED,     // LED 0 (center) - Red
+        HUE_ORANGE,  // LED 1 - Orange  
+        HUE_YELLOW,  // LED 2 - Yellow
+        HUE_GREEN,   // LED 3 - Green
+        HUE_AQUA,    // LED 4 - Aqua/Cyan
+        HUE_BLUE,    // LED 5 - Blue
+        HUE_PURPLE   // LED 6 (top) - Purple
+    };
+    
+    ESP_LOGI(__FILE__, "Starting rainbow sequence");
+    
+    // Light up each LED one at a time with rainbow colors
+    for(int i = 0; i < 7; i++) {
+        // Create HSV color with full saturation and brightness
+        hsv_t hsv_color = {
+            .hue = rainbow_hues[i],
+            .saturation = 255,
+            .value = 200  // Slightly dimmed for better visibility
+        };
+        
+        // Convert HSV to RGB
+        rgb_t rgb_color = hsv2rgb_rainbow(hsv_color);
+        
+        // Light up the current LED
+        led_rgb_color(i, rgb_color);
+        
+        ESP_LOGI(__FILE__, "Rainbow LED %d lit with hue %d", i, rainbow_hues[i]);
+        
+        // Wait before lighting the next LED
+        vTaskDelay(300 / portTICK_PERIOD_MS);
+    }
+    
+    // Keep the rainbow on for a moment
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    
+    // Turn off all LEDs one by one
+    for(int i = 0; i < 7; i++) {
+        led_rgb_off(i);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+    }
+    
+    ESP_LOGI(__FILE__, "Rainbow sequence completed");
 }
 
 void led_task(void* arg) 
