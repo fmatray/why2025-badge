@@ -21,6 +21,7 @@ static bool sta_connected = false;
 static uint8_t admin_state = ADMIN_STATE_OFF;
 
 static uint8_t up_button_press_counter = 0;
+static uint8_t down_button_press_counter = 0;
 static int8_t counter_screen = -1; // Initialize to invalid screen index
 
 // Forward declarations
@@ -98,8 +99,9 @@ void ui_button_up()
 {
     // Check if this is the first button press or if we've changed screens
     if (counter_screen != current_screen) {
-        // Reset counter when screen changes
+        // Reset counters when screen changes
         up_button_press_counter = 0;
+        down_button_press_counter = 0;
         // Update counter_screen to current screen
         counter_screen = current_screen;
         //printf("DEBUG: Started counting UP presses on screen index: %d\n", current_screen);
@@ -165,6 +167,31 @@ void ui_button_up()
 
 void ui_button_down()
 {
+    // Check if this is the first button press or if we've changed screens
+    if (counter_screen != current_screen) {
+        // Reset counters when screen changes
+        up_button_press_counter = 0;
+        down_button_press_counter = 0;
+        // Update counter_screen to current screen
+        counter_screen = current_screen;
+    }
+    
+    // Increment counter for DOWN button presses
+    down_button_press_counter++;
+    ESP_LOGI("UI", "DOWN button press count: %d on screen index: %d", down_button_press_counter, current_screen);
+    
+    // Check if we've reached 7 presses
+    if (down_button_press_counter == 7) {
+        // Call rainbow() function when on SCREEN_LOGO (index 0)
+        if (current_screen == SCREEN_LOGO) {
+            ESP_LOGI("UI", "Rainbow sequence activated!");
+            rainbow();
+        }        
+        
+        // Reset the counter after reaching 7
+        down_button_press_counter = 0;
+    }
+
     if(ui_update_backlight(true)){
         return;
     }

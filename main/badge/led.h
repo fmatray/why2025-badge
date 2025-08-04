@@ -34,4 +34,6 @@ void led_task(void* arg);
 
 void set_completed(void);
 
+void rainbow(void);
+
 #endif // _LED_H
