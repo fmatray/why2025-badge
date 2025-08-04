@@ -72,6 +72,7 @@ char* load_schedule_from_file() {
         return NULL;
     } 
     fread(data_buf, 1, file_size, fp);
+    data_buf[file_size] = '\0';  // Null-terminate the string
     fclose(fp);
     return data_buf;
 }
