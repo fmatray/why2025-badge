@@ -36,4 +36,8 @@ void set_completed(void);
 
 void rainbow(void);
 
+void flash(int period, uint8_t fade_factor);
+
+void set_easter_egg_active(bool active);
+
 #endif // _LED_H

@@ -6,6 +6,7 @@ static const char *TAG = "strip_ws2812";
 
 static const uint8_t led_order[] = {2, 6, 1, 0, 4, 5, 3}; // 0: center, 6: top
 static led_strip_t *strip;
+static bool easter_egg_active = false; // Flag to block LED flashing during easter eggs
 
 static void i2c_register_write(uint8_t addr, uint8_t reg_addr, uint8_t data)
 {
@@ -153,6 +154,8 @@ void flash(int period, uint8_t fade_factor) {
 }
 
 void set_completed(){
+    set_easter_egg_active(true); // Block LED flashing
+    
     rgb_t color = rgb_from_code(MAGENTA_SAIYAN);
     color = rgb_fade(color, 0xf0);
     for(int i=1; i<7;i++){
@@ -167,9 +170,13 @@ void set_completed(){
         led_rgb_off(i);
         vTaskDelay(200 / portTICK_PERIOD_MS);
     }
+    
+    set_easter_egg_active(false); // Re-enable LED flashing
 }
 
 void rainbow() {
+    set_easter_egg_active(true); // Block LED flashing
+    
     // Define rainbow colors using HSV for better color representation
     uint8_t rainbow_hues[7] = {
         HUE_RED,     // LED 0 (center) - Red
@@ -214,12 +221,27 @@ void rainbow() {
     }
     
     ESP_LOGI(__FILE__, "Rainbow sequence completed");
+    
+    set_easter_egg_active(false); // Re-enable LED flashing
+}
+
+void set_easter_egg_active(bool active) {
+    easter_egg_active = active;
+    ESP_LOGI(__FILE__, "Easter egg mode %s", active ? "ENABLED" : "DISABLED");
 }
 
 void led_task(void* arg) 
 {
     while(1){
         ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
+        
+        // Skip normal LED operations if easter egg is active
+        if(easter_egg_active) {
+            ESP_LOGI(__FILE__, "Easter egg active, skipping normal LED operations");
+            vTaskDelay(1000 / portTICK_PERIOD_MS); // Wait 1 second before checking again
+            continue;
+        }
+        
         bool nearby_set = check_ble_set();
         if(nearby_set)
         {
