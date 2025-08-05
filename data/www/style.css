@@ -446,4 +446,53 @@ input.accordion:checked ~ .tab-content {
     color: #000;
     font-weight: bold; }
   #table-schedule td:last-child {
-    border-bottom: 2px solid #cccccc; } }
+    border-bottom: 2px solid #cccccc; }
+  
+  /* Radar mobile responsiveness */
+  .radar-box {
+    width: 280px;
+    height: 280px;
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto; }
+  
+  .radar-content {
+    width: 240px;
+    height: 240px;
+    border: 12px solid #f3ecec; }
+  
+  .radar-content::before {
+    width: 218px;
+    height: 218px; }
+  
+  .radar-content::after {
+    width: 212px;
+    height: 212px;
+    margin-left: -106px;
+    margin-top: -106px; }
+  
+  .l-box {
+    text-align: center; } }
+
+/* Extra small screen responsiveness for very small phones */
+@media only screen and (max-width: 480px) {
+  .radar-box {
+    width: 240px;
+    height: 240px;
+    margin-top: 15px; }
+  
+  .radar-content {
+    width: 200px;
+    height: 200px;
+    border: 10px solid #f3ecec; }
+  
+  .radar-content::before {
+    width: 180px;
+    height: 180px; }
+  
+  .radar-content::after {
+    width: 175px;
+    height: 175px;
+    margin-left: -87.5px;
+    margin-top: -87.5px; }
+}
