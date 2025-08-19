@@ -1,11 +1,26 @@
 #include "ui.h"
 #include "led.h"
 
-enum screen_order {SCREEN_LOGO, SCREEN_PERSON, SCREEN_EVENT, SCREEN_RADAR, SCREEN_RSSI,  SCREEN_ADMIN, SCREEN_SNAKE, NUM_SCREENS};
+enum screen_order {
+  SCREEN_LOGO,
+  SCREEN_PERSON,
+  SCREEN_EVENT,
+  SCREEN_RADAR,
+  SCREEN_RSSI,
+  SCREEN_ADMIN,
+  SCREEN_SNAKE,
+  NUM_SCREENS
+};
+const int nb_screens = 8;
 static lv_obj_t* screens[NUM_SCREENS];
 static int8_t current_screen = SCREEN_LOGO;
 
 static uint32_t last_trigger = -1;
+
+static lv_obj_t *person_name;
+static lv_obj_t *person_organization;
+static lv_obj_t *person_job;
+static lv_obj_t *person_message;
 
 static lv_obj_t *radar_node[MAX_NEARBY_NODE] = {0};
 static lv_obj_t *radar_node_number[MAX_NEARBY_NODE] = {0};
@@ -111,9 +126,10 @@ void ui_button_up()
     up_button_press_counter++;
     ESP_LOGI("UI", "UP button press count: %d on screen index: %d", up_button_press_counter, current_screen);
     
-    // Check if we've reached 8 presses
-    if (up_button_press_counter == 8) {
-        // printf("DEBUG: UP button pressed 8 times on screen %s (index: %d)\n", current_screen);
+    // Check if we've reached nb_screens presses
+    if (up_button_press_counter == nb_screens
+    ) {
+        // printf("DEBUG: UP button pressed nb_screens times on screen %s (index: %d)\n", current_screen);
         
         // Call set_completed() function when on SCREEN_LOGO (index 0)
         if (current_screen == SCREEN_LOGO) {
@@ -121,7 +137,7 @@ void ui_button_up()
             set_completed();
         }        
         
-        // Reset the counter after reaching 8
+        // Reset the counter after reaching nb_screens
         up_button_press_counter = 0;
     }
 
@@ -131,7 +147,11 @@ void ui_button_up()
     }
 
     switch (current_screen) {
-        case SCREEN_SNAKE:
+      case SCREEN_PERSON:
+            ui_set_person();
+            break;
+
+      case SCREEN_SNAKE:
             lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_LOW);
             snake_set_dir(1);
             break;
@@ -156,7 +176,6 @@ void ui_button_up()
                     break;
             }
             break;
-        case SCREEN_PERSON:
         case SCREEN_EVENT:
         case SCREEN_RSSI:
             scroll_up(screens[current_screen]);
@@ -181,15 +200,15 @@ void ui_button_down()
     down_button_press_counter++;
     ESP_LOGI("UI", "DOWN button press count: %d on screen index: %d", down_button_press_counter, current_screen);
     
-    // Check if we've reached 8 presses
-    if (down_button_press_counter == 8) {
+    // Check if we've reached nb_screens presses
+    if (down_button_press_counter == nb_screens) {
         // Call rainbow() function when on SCREEN_LOGO (index 0)
         if (current_screen == SCREEN_LOGO) {
             ESP_LOGI("UI", "Rainbow sequence activated!");
             rainbow();
         }        
         
-        // Reset the counter after reaching 8
+        // Reset the counter after reaching nb_screens
         down_button_press_counter = 0;
     }
 
@@ -198,7 +217,10 @@ void ui_button_down()
     }
 
     switch(current_screen){
-        case SCREEN_SNAKE:
+      case SCREEN_PERSON:
+            ui_set_person();
+            break;
+      case SCREEN_SNAKE:
             lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_LOW);
             snake_set_dir(-1);
             break;
@@ -219,7 +241,6 @@ void ui_button_down()
                     break;
             }
             break;
-        case SCREEN_PERSON:
         case SCREEN_EVENT:
         case SCREEN_RSSI:
             scroll_down(screens[current_screen]);
@@ -453,6 +474,13 @@ void ui_screen_splash_init(){
     screens[SCREEN_LOGO] = screen_logo;
 }
 
+void ui_set_person() {
+    lv_label_set_text(person_name, badge_obj.person_name);
+    lv_label_set_text(person_organization, badge_obj.organization);
+    lv_label_set_text(person_job, badge_obj.job);
+    lv_label_set_text(person_message, badge_obj.message);
+}
+
 void ui_screen_person_init() {
     /* Styling */
     static lv_style_t style_name;
@@ -465,38 +493,31 @@ void ui_screen_person_init() {
     lv_style_init(&style_organization_job);
     lv_style_set_text_font(&style_organization_job, LV_OBJ_PART_MAIN, &lv_font_montserrat_18);
 
-
     /* Screen and labels creation */
     screen_person = lv_obj_create(NULL, NULL);
 
-    lv_obj_t *name = lv_label_create(screen_person, NULL);    /*Used as a base label*/
-    lv_label_set_long_mode(name, LV_LABEL_LONG_BREAK);     /*Break the long lines*/
-    lv_label_set_recolor(name, true);                      /*Enable re-coloring by commands in the text*/
-    lv_label_set_align(name, LV_LABEL_ALIGN_CENTER);       /*Center aligned lines*/
-    lv_obj_set_width(name, NAME_LABEL_SIZE);
-    lv_obj_align(name, NULL, LV_ALIGN_CENTER, 0, -60);
+    person_name = lv_label_create(screen_person, NULL);    /*Used as a base label*/
+    lv_label_set_long_mode(person_name, LV_LABEL_LONG_BREAK);     /*Break the long lines*/
+    lv_label_set_recolor(person_name, true);                      /*Enable re-coloring by commands in the text*/
+    lv_label_set_align(person_name, LV_LABEL_ALIGN_CENTER);       /*Center aligned lines*/
+    lv_obj_set_width(person_name, NAME_LABEL_SIZE);
+    lv_obj_align(person_name, NULL, LV_ALIGN_CENTER, 0, -60);
     
-    lv_obj_t *organization = lv_label_create(screen_person, name);
-    lv_obj_align(organization, NULL, LV_ALIGN_CENTER, 0, -30);
+    person_organization = lv_label_create(screen_person, person_name);
+    lv_obj_align(person_organization, NULL, LV_ALIGN_CENTER, 0, -30);
 
-    lv_obj_t *job = lv_label_create(screen_person, name);
-    lv_obj_align(job, NULL, LV_ALIGN_CENTER, 0, 0);
+    person_job = lv_label_create(screen_person, person_name);
+    lv_obj_align(person_job, NULL, LV_ALIGN_CENTER, 0, 0);
 
-    lv_obj_t *message = lv_label_create(screen_person, name);
-    lv_obj_align(message, NULL, LV_ALIGN_CENTER, 0, 60);
+    person_message = lv_label_create(screen_person, person_name);
+    lv_obj_align(person_message, NULL, LV_ALIGN_CENTER, 0, 60);
 
-    /* Setting texts */
-    lv_label_set_text(name, badge_obj.person_name);
-    lv_obj_add_style(name, LV_OBJ_PART_MAIN, &style_name);
-
-    lv_label_set_text(organization, badge_obj.organization);
-    lv_obj_add_style(organization, LV_OBJ_PART_MAIN, &style_organization_job);
-    lv_label_set_text(job, badge_obj.job);
-    
-    lv_obj_add_style(job, LV_OBJ_PART_MAIN, &style_organization_job);
-    lv_label_set_text(message, badge_obj.message);
-
-    
+    /* Setting styles */
+    lv_obj_add_style(person_name, LV_OBJ_PART_MAIN, &style_name);
+    lv_obj_add_style(person_organization, LV_OBJ_PART_MAIN, &style_organization_job);
+    lv_obj_add_style(person_job, LV_OBJ_PART_MAIN, &style_organization_job);
+    /* Stetting texts */
+    ui_set_person();
     screens[SCREEN_PERSON] = screen_person;
 }
 

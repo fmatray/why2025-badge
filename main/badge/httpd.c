@@ -350,6 +350,7 @@ static esp_err_t person_handler(httpd_req_t *req, const char* client_data){
                 badge_obj.update(7, job->valuestring);
             if (cJSON_IsString(message) && message->valuestring != NULL && strlen(message->valuestring) > 0)
                 badge_obj.update(8, message->valuestring);
+            ui_set_person();    
         }
         cJSON *person_obj = cJSON_CreateObject();
         cJSON_AddStringToObject(person_obj, "name", badge_obj.person_name);
