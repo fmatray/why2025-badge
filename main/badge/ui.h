@@ -37,12 +37,15 @@
 #define ADMIN_STATE_AP 1
 #define ADMIN_STATE_STA 2
 
+#define NAME_LABEL_SIZE 300
+
 lv_obj_t *screen_logo;  // page 0
-lv_obj_t *screen_event; // page 1
-lv_obj_t *screen_radar; // page 2
-lv_obj_t *screen_rssi;  // page 3
-lv_obj_t *screen_snake; // page 4
-lv_obj_t *screen_admin; // page 5
+lv_obj_t *screen_person;  // page 1
+lv_obj_t *screen_event; // page 2
+lv_obj_t *screen_radar; // page 3
+lv_obj_t *screen_rssi;  // page 4
+lv_obj_t *screen_snake; // page 5
+lv_obj_t *screen_admin; // page 6
 
 lv_task_t* snake_task_handle;
 lv_task_t* radar_task_handle;

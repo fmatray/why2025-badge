@@ -25,6 +25,7 @@
 
 #define BADGE_BUF_SIZE 20
 #define BADGE_NAME_MAX_SIZE 28
+#define NAME_MAX_SIZE 64
 #define SCHEDULE_BUFFER_LEN 10000
 
 #define MAX_NEARBY_NODE 16
@@ -49,6 +50,11 @@ typedef struct {
     char sta_ssid[BADGE_BUF_SIZE];
     char sta_password[BADGE_BUF_SIZE];
     char sync_path[BADGE_BUF_SIZE];
+
+    char person_name[NAME_MAX_SIZE];
+    char organization[NAME_MAX_SIZE];
+    char job[NAME_MAX_SIZE];
+    char message[NAME_MAX_SIZE];
 
     // Display brightness settings
     uint8_t brightness_max;

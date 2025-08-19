@@ -149,19 +149,37 @@ bool update_attribute(int id, char* data) {
         case 4: // Sync path
             snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", data);
             break;
-    }
+
+        case 5: // person name
+            snprintf(badge_obj.person_name, SIZEOF(badge_obj.person_name), "%s", data);
+            break;
+        case 6: // person organization
+            snprintf(badge_obj.organization, SIZEOF(badge_obj.organization), "%s", data);
+            break;
+        case 7: // person job
+            snprintf(badge_obj.job, SIZEOF(badge_obj.job), "%s", data);
+            break;
+        case 8: // person message
+            snprintf(badge_obj.message, SIZEOF(badge_obj.message), "%s", data);
+            break;
+        }
     
     cJSON* json_settings = load_settings();
     cJSON *obj_badge = cJSON_GetObjectItem(json_settings, "badge");
     cJSON *obj_web = cJSON_GetObjectItem(json_settings, "web");
     cJSON *obj_ap = cJSON_GetObjectItem(json_settings, "ap");
     cJSON *obj_sync = cJSON_GetObjectItem(json_settings, "sync");
+    cJSON *obj_person = cJSON_GetObjectItem(json_settings, "person");
 
     json_set_str_value(obj_badge, "name", badge_obj.device_name);
     json_set_str_value(obj_ap, "ssid", badge_obj.ap_ssid);
     json_set_str_value(obj_ap, "password", badge_obj.ap_password);
     json_set_str_value(obj_web, "login", badge_obj.web_login);
     json_set_str_value(obj_sync, "path", badge_obj.sync_path);
+    json_set_str_value(obj_person, "name", badge_obj.person_name);
+    json_set_str_value(obj_person, "organization", badge_obj.organization);
+    json_set_str_value(obj_person, "job", badge_obj.job);
+    json_set_str_value(obj_person, "message", badge_obj.message);
 
     save_settings(json_settings);
     cJSON_Delete(json_settings);
@@ -194,12 +212,17 @@ void badge_init(){
         cJSON *obj_ap = cJSON_GetObjectItem(json_settings, "ap");
         cJSON *obj_sta = cJSON_GetObjectItem(json_settings, "sta");
         cJSON *obj_sync = cJSON_GetObjectItem(json_settings, "sync");
+        cJSON *obj_person = cJSON_GetObjectItem(json_settings, "person");
         cJSON *obj_display = cJSON_GetObjectItem(json_settings, "display");
 
         const char* web_login = json_get_str_value(obj_web, "login");
         const char* sta_ssid = json_get_str_value(obj_sta, "ssid");
         const char* sta_password = json_get_str_value(obj_sta, "password");
-        const char* sync_path = json_get_str_value(obj_sync, "path");
+        const char *sync_path = json_get_str_value(obj_sync, "path");
+        const char *person_name = json_get_str_value(obj_person, "name");
+        const char *organization = json_get_str_value(obj_person, "organization");
+        const char *job = json_get_str_value(obj_person, "job");
+        const char *message = json_get_str_value(obj_person, "message");
         
         // Load brightness settings with defaults if not present
         int brightness_max = obj_display ? json_get_int_value(obj_display, "brightness_max") : 255;
@@ -218,6 +241,11 @@ void badge_init(){
         snprintf(badge_obj.sta_password, SIZEOF(badge_obj.sta_password), "%s", sta_password);
         snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", sync_path);
 
+        snprintf(badge_obj.person_name, SIZEOF(badge_obj.person_name), "%s", person_name);
+        snprintf(badge_obj.organization, SIZEOF(badge_obj.organization), "%s", organization);
+        snprintf(badge_obj.job, SIZEOF(badge_obj.job), "%s", job);
+        snprintf(badge_obj.message, SIZEOF(badge_obj.message), "%s", message);
+
         // Set brightness values
         badge_obj.brightness_max = (uint8_t)brightness_max;
         badge_obj.brightness_mid = (uint8_t)brightness_mid;
@@ -229,6 +257,10 @@ void badge_init(){
         json_set_str_value(obj_ap, "ssid", badge_obj.ap_ssid);
         json_set_str_value(obj_ap, "password", badge_obj.ap_password);
         json_set_str_value(obj_sync, "path", badge_obj.sync_path);
+        json_set_str_value(obj_person, "name", badge_obj.person_name);
+        json_set_str_value(obj_person, "organization", badge_obj.organization);
+        json_set_str_value(obj_person, "job", badge_obj.job);
+        json_set_str_value(obj_person, "message", badge_obj.message);
 
         // Save to settings.json
         save_settings(json_settings);
@@ -243,6 +275,7 @@ void badge_init(){
     cJSON *obj_ap = cJSON_GetObjectItem(json_settings, "ap");
     cJSON *obj_sta = cJSON_GetObjectItem(json_settings, "sta");
     cJSON *obj_sync = cJSON_GetObjectItem(json_settings, "sync");
+    cJSON *obj_person = cJSON_GetObjectItem(json_settings, "person");
     cJSON *obj_display = cJSON_GetObjectItem(json_settings, "display");
 
     const char* badge_name = json_get_str_value(obj_badge, "name"); // should be empty
@@ -251,7 +284,11 @@ void badge_init(){
     const char* ap_password = json_get_str_value(obj_ap, "password"); // should be empty
     const char* sta_ssid = json_get_str_value(obj_sta, "ssid");
     const char* sta_password = json_get_str_value(obj_sta, "password");
-    const char* sync_path = json_get_str_value(obj_sync, "path");
+    const char *sync_path = json_get_str_value(obj_sync, "path");
+    const char *person_name = json_get_str_value(obj_person, "name");
+    const char *organization = json_get_str_value(obj_person, "organization");
+    const char *job = json_get_str_value(obj_person, "job");
+    const char *message = json_get_str_value(obj_person, "message");
     
     // Load brightness settings with defaults if not present
     int brightness_max = obj_display ? json_get_int_value(obj_display, "brightness_max") : 255;
@@ -272,7 +309,11 @@ void badge_init(){
     snprintf(badge_obj.sta_ssid, SIZEOF(badge_obj.sta_ssid), "%s", sta_ssid);
     snprintf(badge_obj.sta_password, SIZEOF(badge_obj.sta_password), "%s", sta_password);
     snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", sync_path);
-    
+    snprintf(badge_obj.person_name, SIZEOF(badge_obj.person_name), "%s", person_name);
+    snprintf(badge_obj.organization, SIZEOF(badge_obj.organization), "%s", organization);
+    snprintf(badge_obj.job, SIZEOF(badge_obj.job), "%s", job);
+    snprintf(badge_obj.message, SIZEOF(badge_obj.message), "%s", message);
+
     // Set brightness values
     badge_obj.brightness_max = (uint8_t)brightness_max;
     badge_obj.brightness_mid = (uint8_t)brightness_mid;

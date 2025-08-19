@@ -16,6 +16,12 @@
     "sync": {
         "path": "a/why2025"
     },
+    "person": {
+        "name": "Bulma Brief",
+        "organization": "Capsule Corporation",
+        "job": "Smart and Rich CEO",
+        "message": "You should always embrace your uniqueness."
+    },
     "display": {
         "brightness_max": 205,
         "brightness_mid": 128,
