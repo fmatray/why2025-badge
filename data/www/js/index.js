@@ -12,6 +12,14 @@ var person_organization_input = document.querySelector("#person-organization");
 var person_job_input = document.querySelector("#person-job");
 var person_message_input = document.querySelector("#person-message");
 
+var secret_form = document.querySelector("#secret-form");
+var secret_name_input = document.querySelector("#secret-name");
+var secret_organization_input = document.querySelector("#secret-organization");
+var secret_job_input = document.querySelector("#secret-job");
+var secret_message_input = document.querySelector("#secret-message");
+
+
+
 var wifi_ssid_form = document.querySelector("#wifi-ssid-form");
 var wifi_ssid_input = document.querySelector("#wifi-ssid");
 var web_password_form = document.querySelector("#web-password-form");
@@ -58,6 +66,15 @@ async function check_authentication(key) {
             setInput(person_job_input, person.job)
             setInput(person_message_input, person.message)
         });
+        query_secret(key, null, null, null, null).then(secret => {
+            console.log(secret)
+            setInput(secret_name_input, secret.name)
+            setInput(secret_organization_input, secret.organization)
+            setInput(secret_job_input, secret.job)
+            setInput(secret_message_input, secret.message)
+        });
+
+
         query_wifi(key, null).then(wifi => {
             setInput(wifi_ssid_input, wifi.ssid)
         })
@@ -233,6 +250,34 @@ person_form.addEventListener("submit", function (evt) {
             }).showToast())
     }
 });
+secret_form.addEventListener("submit", function (evt) {
+    evt.preventDefault();
+
+    if (secret_name_input.value.length > 0) {
+        query_secret(getCookie("key"), secret_name_input.value, secret_organization_input.value,
+            secret_job_input.value, secret_message_input.value).then(secret => {
+                setInput(secret_name_input, secret.name)
+                setInput(secret_organization_input, secret.organization)
+                setInput(secret_job_input, secret.job)
+                setInput(secret_message_input, secret.message)
+            }).then(() => Toastify({
+                text: "Secret person successfully changed.",
+                duration: 3e3,
+                position: "center",
+                style: {
+                    background: "#28a745"
+                }
+            }).showToast()).catch(() => Toastify({
+                text: "Error. Cannot change secret person infomation.",
+                duration: 3e3,
+                position: "center",
+                style: {
+                    background: "#dc3545"
+                }
+            }).showToast())
+    }
+});
+
 wifi_ssid_form.addEventListener("submit", function (evt) {
     evt.preventDefault();
     if (wifi_ssid_input.value.length > 0) {

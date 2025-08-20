@@ -350,7 +350,7 @@ static esp_err_t person_handler(httpd_req_t *req, const char* client_data){
                 badge_obj.update(7, job->valuestring);
             if (cJSON_IsString(message) && message->valuestring != NULL && strlen(message->valuestring) > 0)
                 badge_obj.update(8, message->valuestring);
-            ui_set_person();    
+            ui_set_person(false);    
         }
         cJSON *person_obj = cJSON_CreateObject();
         cJSON_AddStringToObject(person_obj, "name", badge_obj.person_name);
@@ -367,6 +367,56 @@ static esp_err_t person_handler(httpd_req_t *req, const char* client_data){
     }
     else{
         httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on person_handler() function");
+        err = ESP_FAIL;
+    }
+
+    cJSON_Delete(response);
+    cJSON_Delete(client_json);
+
+    return err;
+}
+
+static esp_err_t secret_handler(httpd_req_t *req, const char* client_data){
+    httpd_resp_set_type(req, "application/json");
+
+    cJSON *response = cJSON_CreateObject();
+    cJSON *client_json = cJSON_Parse(client_data);
+   
+    esp_err_t err;
+    if (check_session(req, client_data)) {
+        cJSON *secret = cJSON_GetObjectItem(client_json, "secret");
+        if(cJSON_IsObject(secret)){
+            cJSON *name = cJSON_GetObjectItem(secret, "name");
+            cJSON *organization = cJSON_GetObjectItem(secret, "organization");
+            cJSON *job = cJSON_GetObjectItem(secret, "job");
+            cJSON *message = cJSON_GetObjectItem(secret, "message");
+
+
+            if (cJSON_IsString(name) && name->valuestring != NULL && strlen(name->valuestring) > 0) 
+                badge_obj.update(9, name->valuestring);
+            if (cJSON_IsString(organization) && organization->valuestring != NULL && strlen(organization->valuestring) > 0)
+                badge_obj.update(10, organization->valuestring);
+            if (cJSON_IsString(job) && job->valuestring != NULL && strlen(job->valuestring) > 0)
+                badge_obj.update(11, job->valuestring);
+            if (cJSON_IsString(message) && message->valuestring != NULL && strlen(message->valuestring) > 0)
+                badge_obj.update(12, message->valuestring);
+            ui_set_person(true);    
+        }
+        cJSON *secret_obj = cJSON_CreateObject();
+        cJSON_AddStringToObject(secret_obj, "name", badge_obj.secret_name);
+        cJSON_AddStringToObject(secret_obj, "organization", badge_obj.secret_organization);
+        cJSON_AddStringToObject(secret_obj, "job", badge_obj.secret_job);
+        cJSON_AddStringToObject(secret_obj, "message", badge_obj.secret_message);
+        cJSON_AddItemToObject(response, "secret", secret_obj);
+
+        char* response_str = cJSON_PrintUnformatted(response);
+        
+        err = rest_send_response(req, response_str);
+
+        cJSON_free((void*)response_str);
+    }
+    else{
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on secret_handler() function");
         err = ESP_FAIL;
     }
 
@@ -526,8 +576,9 @@ static esp_err_t post_handler(httpd_req_t *req)
       badge_name_handler(req, buf);
     } else if (is_string_match(cmd, "person")) {
       person_handler(req, buf);
-    }
-    else if (is_string_match(cmd, "wifi")) {
+    } else if (is_string_match(cmd, "secret")) {
+      secret_handler(req, buf);
+    } else if (is_string_match(cmd, "wifi")) {
         wifi_handler(req, buf);
     } else if (is_string_match(cmd, "password")) {
         password_handler(req, buf);

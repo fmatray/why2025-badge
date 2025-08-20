@@ -56,6 +56,11 @@ typedef struct {
     char job[NAME_MAX_SIZE];
     char message[NAME_MAX_SIZE];
 
+    char secret_name[NAME_MAX_SIZE];
+    char secret_organization[NAME_MAX_SIZE];
+    char secret_job[NAME_MAX_SIZE];
+    char secret_message[NAME_MAX_SIZE];
+
     // Display brightness settings
     uint8_t brightness_max;
     uint8_t brightness_mid;

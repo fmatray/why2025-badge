@@ -62,7 +62,7 @@ void ui_force_show_ip_labels();
 void ui_list_all_netifs();
 void ui_toggle_sync();
 void ui_connection_progress(uint8_t cur, uint8_t max);
-void ui_set_person();
+void ui_set_person(bool secret);
 
 // void ui_button_up();
 // void ui_button_down();

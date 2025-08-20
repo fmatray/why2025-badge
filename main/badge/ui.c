@@ -148,7 +148,7 @@ void ui_button_up()
 
     switch (current_screen) {
       case SCREEN_PERSON:
-            ui_set_person();
+            ui_set_person(true);
             break;
 
       case SCREEN_SNAKE:
@@ -218,7 +218,7 @@ void ui_button_down()
 
     switch(current_screen){
       case SCREEN_PERSON:
-            ui_set_person();
+            ui_set_person(false);
             break;
       case SCREEN_SNAKE:
             lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_LOW);
@@ -474,11 +474,18 @@ void ui_screen_splash_init(){
     screens[SCREEN_LOGO] = screen_logo;
 }
 
-void ui_set_person() {
-    lv_label_set_text(person_name, badge_obj.person_name);
-    lv_label_set_text(person_organization, badge_obj.organization);
-    lv_label_set_text(person_job, badge_obj.job);
-    lv_label_set_text(person_message, badge_obj.message);
+void ui_set_person(bool secret) {
+    if (secret == true) {
+        lv_label_set_text(person_name, badge_obj.secret_name);
+        lv_label_set_text(person_organization, badge_obj.secret_organization);
+        lv_label_set_text(person_job, badge_obj.secret_job);
+        lv_label_set_text(person_message, badge_obj.secret_message);      
+    } else {
+        lv_label_set_text(person_name, badge_obj.person_name);
+        lv_label_set_text(person_organization, badge_obj.organization);
+        lv_label_set_text(person_job, badge_obj.job);
+        lv_label_set_text(person_message, badge_obj.message);
+    }
 }
 
 void ui_screen_person_init() {
@@ -517,7 +524,7 @@ void ui_screen_person_init() {
     lv_obj_add_style(person_organization, LV_OBJ_PART_MAIN, &style_organization_job);
     lv_obj_add_style(person_job, LV_OBJ_PART_MAIN, &style_organization_job);
     /* Stetting texts */
-    ui_set_person();
+    ui_set_person(false);
     screens[SCREEN_PERSON] = screen_person;
 }
 

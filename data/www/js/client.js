@@ -99,6 +99,21 @@ async function query_person(key, name, organization, job, message) {
         return Promise.reject(error)
     })
 }
+async function query_secret(key, name, organization, job, message) {
+    return query("secret", {
+        key: key,
+        secret: {
+            name: name,
+            organization: organization,
+            job: job,
+            message: message
+        }
+    }).then(data => {
+        return data.secret
+    }).catch(error => {
+        return Promise.reject(error)
+    })
+}
 async function query_wifi(key, ssid, password) {
     return query("wifi", {
         key: key,
