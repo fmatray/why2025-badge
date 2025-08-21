@@ -4,6 +4,7 @@
 enum screen_order {
   SCREEN_LOGO,
   SCREEN_PERSON,
+  SCREEN_SOCIALENERGY,
   SCREEN_EVENT,
   SCREEN_RADAR,
   SCREEN_RSSI,
@@ -11,7 +12,7 @@ enum screen_order {
   SCREEN_SNAKE,
   NUM_SCREENS
 };
-const int nb_screens = 8;
+const int nb_screens = 9;
 static lv_obj_t* screens[NUM_SCREENS];
 static int8_t current_screen = SCREEN_LOGO;
 
@@ -21,6 +22,8 @@ static lv_obj_t *person_name;
 static lv_obj_t *person_organization;
 static lv_obj_t *person_job;
 static lv_obj_t *person_message;
+
+static lv_obj_t *socialenergy_gauge;
 
 static lv_obj_t *radar_node[MAX_NEARBY_NODE] = {0};
 static lv_obj_t *radar_node_number[MAX_NEARBY_NODE] = {0};
@@ -145,12 +148,17 @@ void ui_button_up()
     if(ui_update_backlight(true)){
         return;
     }
+    int needle_value = 0;
 
     switch (current_screen) {
       case SCREEN_PERSON:
             ui_set_person(true);
             break;
-
+      case SCREEN_SOCIALENERGY:
+            needle_value = lv_gauge_get_value(socialenergy_gauge, 0) - 5;
+            needle_value = needle_value < 0 ? 0 : needle_value; // Low limit to 0
+            lv_gauge_set_value(socialenergy_gauge, 0, needle_value);
+        break;
       case SCREEN_SNAKE:
             lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_LOW);
             snake_set_dir(1);
@@ -216,10 +224,18 @@ void ui_button_down()
         return;
     }
 
+    int needle_value = 0;
+
     switch(current_screen){
       case SCREEN_PERSON:
             ui_set_person(false);
             break;
+      case SCREEN_SOCIALENERGY:
+            needle_value = lv_gauge_get_value(socialenergy_gauge, 0) + 5;
+            needle_value = needle_value > 100 ? 100 : needle_value; // TOP limit to 100
+            lv_gauge_set_value(socialenergy_gauge, 0, needle_value);
+        break;
+
       case SCREEN_SNAKE:
             lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_LOW);
             snake_set_dir(-1);
@@ -482,9 +498,9 @@ void ui_set_person(bool secret) {
         lv_label_set_text(person_message, badge_obj.secret_message);      
     } else {
         lv_label_set_text(person_name, badge_obj.person_name);
-        lv_label_set_text(person_organization, badge_obj.organization);
-        lv_label_set_text(person_job, badge_obj.job);
-        lv_label_set_text(person_message, badge_obj.message);
+        lv_label_set_text(person_organization, badge_obj.person_organization);
+        lv_label_set_text(person_job, badge_obj.person_job);
+        lv_label_set_text(person_message, badge_obj.person_message);
     }
 }
 
@@ -526,6 +542,62 @@ void ui_screen_person_init() {
     /* Stetting texts */
     ui_set_person(false);
     screens[SCREEN_PERSON] = screen_person;
+}
+
+void ui_screen_socialenergy_init() {
+    /* Gauge Style */*/
+    static lv_style_t gauge_style;
+    lv_style_init(&gauge_style);
+
+    lv_style_set_pad_inner(&gauge_style, LV_STATE_DEFAULT, 5);
+    
+    lv_style_set_line_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_RED);
+    lv_style_set_scale_grad_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_GREEN);
+    lv_style_set_scale_end_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_GREEN);
+
+    lv_style_set_line_width(&gauge_style, LV_STATE_DEFAULT, 2);
+    lv_style_set_scale_end_line_width(&gauge_style, LV_STATE_DEFAULT, 4);
+    lv_style_set_scale_end_border_width(&gauge_style, LV_STATE_DEFAULT, 4);
+
+
+    static lv_style_t needle_style;
+    lv_style_init(&needle_style);
+    lv_style_set_line_width(&needle_style, LV_STATE_DEFAULT, 5);
+    lv_style_set_line_color(&needle_style, LV_STATE_DEFAULT, LV_COLOR_BLACK);
+
+    screen_socialenergy = lv_obj_create(NULL, NULL);
+    /*Describe the color for the needles*/
+    static lv_color_t needle_colors[0];
+    needle_colors[0] = LV_COLOR_BLACK;
+
+    /*Create a gauge*/
+    socialenergy_gauge = lv_gauge_create(screen_socialenergy, NULL);
+
+    lv_obj_add_style(socialenergy_gauge, LV_GAUGE_PART_MAIN, &gauge_style);
+    lv_obj_add_style(socialenergy_gauge, LV_GAUGE_PART_NEEDLE, &needle_style);
+    lv_gauge_set_needle_count(socialenergy_gauge, 1, needle_colors);
+    lv_obj_set_size(socialenergy_gauge, 180, 180);
+    lv_obj_align(socialenergy_gauge, NULL, LV_ALIGN_IN_TOP_MID, 0, 10);
+
+    /*Set the values*/
+    lv_gauge_set_value(socialenergy_gauge, 0, 100);
+
+    /* Label */
+    static lv_style_t style_label;
+    lv_style_init(&style_label);
+    lv_style_set_text_font(&style_label, LV_OBJ_PART_MAIN, &lv_font_montserrat_22);
+
+    lv_obj_t *label = lv_label_create(screen_socialenergy, NULL);
+    lv_label_set_long_mode(label, LV_LABEL_LONG_BREAK);     /*Break the long lines*/
+    lv_label_set_recolor(label, true);                      /*Enable re-coloring by commands in the text*/
+    lv_label_set_align(label, LV_LABEL_ALIGN_CENTER);       /*Center aligned lines*/
+    lv_obj_set_width(label, NAME_LABEL_SIZE);
+    lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 90);
+    lv_obj_add_style(label, LV_OBJ_PART_MAIN, &style_label);
+
+    lv_label_set_text(label, "Social Energy");
+
+    screens[SCREEN_SOCIALENERGY] = screen_socialenergy;
 }
 
 void ui_screen_radar_init(){
@@ -872,6 +944,8 @@ static void ui_init(void)
     ui_screen_splash_init();
 
     ui_screen_person_init();
+
+    ui_screen_socialenergy_init();
 
     ui_screen_event_init();
 

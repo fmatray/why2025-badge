@@ -132,54 +132,7 @@ void save_settings(cJSON* json_settings) {
     ESP_LOGI(__FILE__, "Setting file saved");
 }
 
-bool update_attribute(int id, char* data) { 
-    switch(id){
-        case 0: // Web login password
-            snprintf(badge_obj.web_login, SIZEOF(badge_obj.web_login), "%s", data);
-            break;
-        case 1: // WiFi SSID
-            snprintf(badge_obj.ap_ssid, SIZEOF(badge_obj.ap_ssid), "%s", data);
-            break;
-        case 2: // WiFi Password
-            snprintf(badge_obj.ap_password, SIZEOF(badge_obj.ap_password), "%s", data);
-            break;
-        case 3: // Device name
-            snprintf(badge_obj.device_name, SIZEOF(badge_obj.device_name), "%s", data);
-            break;
-        case 4: // Sync path
-            snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", data);
-            break;
-
-        case 5: // person name
-            snprintf(badge_obj.person_name, SIZEOF(badge_obj.person_name), "%s", data);
-            break;
-        case 6: // person organization
-            snprintf(badge_obj.organization, SIZEOF(badge_obj.organization), "%s", data);
-            break;
-        case 7: // person job
-            snprintf(badge_obj.job, SIZEOF(badge_obj.job), "%s", data);
-            break;
-        case 8: // person message
-            snprintf(badge_obj.message, SIZEOF(badge_obj.message), "%s", data);
-            break;
-
-        case 9: // secret name
-            snprintf(badge_obj.secret_name, SIZEOF(badge_obj.secret_name), "%s", data);
-            break;
-        case 10: // secret organization
-            snprintf(badge_obj.secret_organization, SIZEOF(badge_obj.secret_organization), "%s", data);
-            break;
-        case 11: // secret job
-            snprintf(badge_obj.secret_job, SIZEOF(badge_obj.secret_job), "%s", data);
-            break;
-        case 12: // secret message
-            snprintf(badge_obj.secret_message, SIZEOF(badge_obj.secret_message), "%s", data);
-            break;
-
-
-}
-    
-    cJSON* json_settings = load_settings();
+void save_badge_to_settings_file(cJSON *json_settings) {    
     cJSON *obj_badge = cJSON_GetObjectItem(json_settings, "badge");
     cJSON *obj_web = cJSON_GetObjectItem(json_settings, "web");
     cJSON *obj_ap = cJSON_GetObjectItem(json_settings, "ap");
@@ -194,9 +147,9 @@ bool update_attribute(int id, char* data) {
     json_set_str_value(obj_sync, "path", badge_obj.sync_path);
 
     json_set_str_value(obj_person, "name", badge_obj.person_name);
-    json_set_str_value(obj_person, "organization", badge_obj.organization);
-    json_set_str_value(obj_person, "job", badge_obj.job);
-    json_set_str_value(obj_person, "message", badge_obj.message);
+    json_set_str_value(obj_person, "organization", badge_obj.person_organization);
+    json_set_str_value(obj_person, "job", badge_obj.person_job);
+    json_set_str_value(obj_person, "message", badge_obj.person_message);
 
     json_set_str_value(obj_secret, "name", badge_obj.secret_name);
     json_set_str_value(obj_secret, "organization", badge_obj.secret_organization);
@@ -204,6 +157,54 @@ bool update_attribute(int id, char* data) {
     json_set_str_value(obj_secret, "message", badge_obj.secret_message);
 
     save_settings(json_settings);
+}
+
+bool update_attribute(int id, char* data) { 
+    switch(id){
+        case WEB_LOGIN_ID: // Web login password
+            snprintf(badge_obj.web_login, SIZEOF(badge_obj.web_login), "%s", data);
+            break;
+        case WIFI_SSID_ID: // WiFi SSID
+            snprintf(badge_obj.ap_ssid, SIZEOF(badge_obj.ap_ssid), "%s", data);
+            break;
+        case WIFI_PASSSWORD_ID: // WiFi Password
+            snprintf(badge_obj.ap_password, SIZEOF(badge_obj.ap_password), "%s", data);
+            break;
+        case DEVICE_NAME_ID: // Device name
+            snprintf(badge_obj.device_name, SIZEOF(badge_obj.device_name), "%s", data);
+            break;
+        case SYNC_PATH_ID: // Sync path
+            snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", data);
+            break;
+            
+        case PERSON_NAME_ID: // person name
+            snprintf(badge_obj.person_name, SIZEOF(badge_obj.person_name), "%s", data);
+            break;
+        case PERSON_ORGANIZATION_ID: // person organization
+            snprintf(badge_obj.person_organization, SIZEOF(badge_obj.person_organization), "%s", data);
+            break;
+        case PERSON_JOB_ID: // person job
+            snprintf(badge_obj.person_job, SIZEOF(badge_obj.person_job), "%s", data);
+            break;
+        case PERSON_MESSAGE_ID: // person message
+            snprintf(badge_obj.person_message, SIZEOF(badge_obj.person_message), "%s", data);
+            break;
+
+        case SECRET_NAME_ID: // secret name
+            snprintf(badge_obj.secret_name, SIZEOF(badge_obj.secret_name), "%s", data);
+            break;
+        case SECRET_ORGANIZATION_ID: // secret organization
+            snprintf(badge_obj.secret_organization, SIZEOF(badge_obj.secret_organization), "%s", data);
+            break;
+        case SECRET_JOB_ID: // secret job
+            snprintf(badge_obj.secret_job, SIZEOF(badge_obj.secret_job), "%s", data);
+            break;
+        case SECRET_MESSAGE_ID: // secret message
+            snprintf(badge_obj.secret_message, SIZEOF(badge_obj.secret_message), "%s", data);
+            break;
+        }
+    cJSON *json_settings = load_settings();
+    save_badge_to_settings_file(json_settings);
     cJSON_Delete(json_settings);
     return true;
 }
@@ -244,9 +245,9 @@ void badge_init(){
         const char *sync_path = json_get_str_value(obj_sync, "path");
 
         const char *person_name = json_get_str_value(obj_person, "name");
-        const char *organization = json_get_str_value(obj_person, "organization");
-        const char *job = json_get_str_value(obj_person, "job");
-        const char *message = json_get_str_value(obj_person, "message");
+        const char *person_organization = json_get_str_value(obj_person, "organization");
+        const char *person_job = json_get_str_value(obj_person, "job");
+        const char *person_message = json_get_str_value(obj_person, "message");
 
         const char *secret_name = json_get_str_value(obj_secret, "name");
         const char *secret_organization = json_get_str_value(obj_secret, "organization");
@@ -271,9 +272,9 @@ void badge_init(){
         snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", sync_path);
 
         snprintf(badge_obj.person_name, SIZEOF(badge_obj.person_name), "%s", person_name);
-        snprintf(badge_obj.organization, SIZEOF(badge_obj.organization), "%s", organization);
-        snprintf(badge_obj.job, SIZEOF(badge_obj.job), "%s", job);
-        snprintf(badge_obj.message, SIZEOF(badge_obj.message), "%s", message);
+        snprintf(badge_obj.person_organization, SIZEOF(badge_obj.person_organization), "%s", person_organization);
+        snprintf(badge_obj.person_job, SIZEOF(badge_obj.person_job), "%s", person_job);
+        snprintf(badge_obj.person_message, SIZEOF(badge_obj.person_message), "%s", person_message);
 
         snprintf(badge_obj.secret_name, SIZEOF(badge_obj.secret_name), "%s", secret_name);
         snprintf(badge_obj.secret_organization, SIZEOF(badge_obj.secret_organization), "%s", secret_organization);
@@ -293,9 +294,9 @@ void badge_init(){
         json_set_str_value(obj_sync, "path", badge_obj.sync_path);
 
         json_set_str_value(obj_person, "name", badge_obj.person_name);
-        json_set_str_value(obj_person, "organization", badge_obj.organization);
-        json_set_str_value(obj_person, "job", badge_obj.job);
-        json_set_str_value(obj_person, "message", badge_obj.message);
+        json_set_str_value(obj_person, "organization", badge_obj.person_organization);
+        json_set_str_value(obj_person, "job", badge_obj.person_job);
+        json_set_str_value(obj_person, "message", badge_obj.person_message);
 
         json_set_str_value(obj_secret, "name", badge_obj.secret_name);
         json_set_str_value(obj_secret, "organization", badge_obj.secret_organization);
@@ -360,9 +361,9 @@ void badge_init(){
     snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", sync_path);
 
     snprintf(badge_obj.person_name, SIZEOF(badge_obj.person_name), "%s", person_name);
-    snprintf(badge_obj.organization, SIZEOF(badge_obj.organization), "%s", organization);
-    snprintf(badge_obj.job, SIZEOF(badge_obj.job), "%s", job);
-    snprintf(badge_obj.message, SIZEOF(badge_obj.message), "%s", message);
+    snprintf(badge_obj.person_organization, SIZEOF(badge_obj.person_organization), "%s", organization);
+    snprintf(badge_obj.person_job, SIZEOF(badge_obj.person_job), "%s", job);
+    snprintf(badge_obj.person_message, SIZEOF(badge_obj.person_message), "%s", message);
 
     snprintf(badge_obj.secret_name, SIZEOF(badge_obj.secret_name), "%s", secret_name);
     snprintf(badge_obj.secret_organization, SIZEOF(badge_obj.secret_organization), "%s", secret_organization);

@@ -270,7 +270,7 @@ Check [GitHub issue tracker](https://github.com/CyberSaiyanIT/why2025-badge/issu
 
 ## Wi-Fi SSID name lenght limit
 
-The Wi-Fi SSID for connecting to an external Access Point (AP) is limited to **20 characters**.
+The Wi-Fi SSID for connecting to an external Access Point (AP) is limited to **64 characters**.
 
 ## Use a different logo image
 

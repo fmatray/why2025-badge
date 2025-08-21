@@ -305,7 +305,7 @@ static esp_err_t badge_name_handler(httpd_req_t *req, const char* client_data){
         cJSON* name = cJSON_GetObjectItem(client_json, "name");
         if(cJSON_IsString(name) && (name->valuestring != NULL)){
             if(strlen(name->valuestring) > 0){
-                badge_obj.update(3, name->valuestring);
+                badge_obj.update(DEVICE_NAME_ID, name->valuestring);
             }
         }
         cJSON_AddStringToObject(response, "name", badge_obj.device_name);
@@ -343,20 +343,20 @@ static esp_err_t person_handler(httpd_req_t *req, const char* client_data){
 
 
             if (cJSON_IsString(name) && name->valuestring != NULL && strlen(name->valuestring) > 0) 
-                badge_obj.update(5, name->valuestring);
+                badge_obj.update(PERSON_NAME_ID, name->valuestring);
             if (cJSON_IsString(organization) && organization->valuestring != NULL && strlen(organization->valuestring) > 0)
-                badge_obj.update(6, organization->valuestring);
+                badge_obj.update(PERSON_ORGANIZATION_ID, organization->valuestring);
             if (cJSON_IsString(job) && job->valuestring != NULL && strlen(job->valuestring) > 0)
-                badge_obj.update(7, job->valuestring);
+                badge_obj.update(PERSON_JOB_ID, job->valuestring);
             if (cJSON_IsString(message) && message->valuestring != NULL && strlen(message->valuestring) > 0)
-                badge_obj.update(8, message->valuestring);
+                badge_obj.update(PERSON_MESSAGE_ID, message->valuestring);
             ui_set_person(false);    
         }
         cJSON *person_obj = cJSON_CreateObject();
         cJSON_AddStringToObject(person_obj, "name", badge_obj.person_name);
-        cJSON_AddStringToObject(person_obj, "organization", badge_obj.organization);
-        cJSON_AddStringToObject(person_obj, "job", badge_obj.job);
-        cJSON_AddStringToObject(person_obj, "message", badge_obj.message);
+        cJSON_AddStringToObject(person_obj, "organization", badge_obj.person_organization);
+        cJSON_AddStringToObject(person_obj, "job", badge_obj.person_job);
+        cJSON_AddStringToObject(person_obj, "message", badge_obj.person_message);
         cJSON_AddItemToObject(response, "person", person_obj);
 
         char* response_str = cJSON_PrintUnformatted(response);
@@ -393,13 +393,13 @@ static esp_err_t secret_handler(httpd_req_t *req, const char* client_data){
 
 
             if (cJSON_IsString(name) && name->valuestring != NULL && strlen(name->valuestring) > 0) 
-                badge_obj.update(9, name->valuestring);
+                badge_obj.update(SECRET_NAME_ID, name->valuestring);
             if (cJSON_IsString(organization) && organization->valuestring != NULL && strlen(organization->valuestring) > 0)
-                badge_obj.update(10, organization->valuestring);
+                badge_obj.update(SECRET_ORGANIZATION_ID, organization->valuestring);
             if (cJSON_IsString(job) && job->valuestring != NULL && strlen(job->valuestring) > 0)
-                badge_obj.update(11, job->valuestring);
+                badge_obj.update(SECRET_JOB_ID, job->valuestring);
             if (cJSON_IsString(message) && message->valuestring != NULL && strlen(message->valuestring) > 0)
-                badge_obj.update(12, message->valuestring);
+                badge_obj.update(SECRET_MESSAGE_ID, message->valuestring);
             ui_set_person(true);    
         }
         cJSON *secret_obj = cJSON_CreateObject();
@@ -441,9 +441,9 @@ static esp_err_t wifi_handler(httpd_req_t *req, const char* client_data){
             cJSON* password = cJSON_GetObjectItem(wifi, "password");
 
             if(cJSON_IsString(ssid) && (ssid->valuestring != NULL) && (strlen(ssid->valuestring) > 0)) {
-                badge_obj.update(1, ssid->valuestring);
+                badge_obj.update(WIFI_SSID_ID, ssid->valuestring);
             } else if(cJSON_IsString(password) && (password->valuestring != NULL) && (strlen(password->valuestring) > 0)){
-                badge_obj.update(2, password->valuestring);
+                badge_obj.update(DEVICE_NAME_ID, password->valuestring);
             } 
         }
         
@@ -481,7 +481,7 @@ static esp_err_t password_handler(httpd_req_t *req, const char* client_data){
     if(check_session(req, client_data)){
         cJSON* password = cJSON_GetObjectItem(client_json, "password");
         if(cJSON_IsString(password) && (password->valuestring != NULL) && (strlen(password->valuestring) > 0)) {
-            badge_obj.update(0, password->valuestring);
+            badge_obj.update(WEB_LOGIN_ID, password->valuestring);
         }
         char* response_str = cJSON_PrintUnformatted(response);
         
