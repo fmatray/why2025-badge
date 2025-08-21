@@ -545,13 +545,13 @@ void ui_screen_person_init() {
 }
 
 void ui_screen_socialenergy_init() {
-    /* Gauge Style */*/
+    /* Gauge Style */
     static lv_style_t gauge_style;
     lv_style_init(&gauge_style);
 
-    lv_style_set_pad_inner(&gauge_style, LV_STATE_DEFAULT, 5);
+    lv_style_set_pad_inner(&gauge_style, LV_STATE_DEFAULT, 5);                  // Padding
     
-    lv_style_set_line_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_RED);
+    lv_style_set_line_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_GREEN);      
     lv_style_set_scale_grad_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_GREEN);
     lv_style_set_scale_end_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_GREEN);
 
@@ -559,7 +559,7 @@ void ui_screen_socialenergy_init() {
     lv_style_set_scale_end_line_width(&gauge_style, LV_STATE_DEFAULT, 4);
     lv_style_set_scale_end_border_width(&gauge_style, LV_STATE_DEFAULT, 4);
 
-
+    /* Needle style */
     static lv_style_t needle_style;
     lv_style_init(&needle_style);
     lv_style_set_line_width(&needle_style, LV_STATE_DEFAULT, 5);

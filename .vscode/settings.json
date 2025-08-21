@@ -33,6 +33,7 @@
         "semphr.h": "c",
         "stdio.h": "c",
         "badge.h": "c",
-        "esp_netif_ip_addr.h": "c"
+        "esp_netif_ip_addr.h": "c",
+        "button.h": "c"
     }
 }
