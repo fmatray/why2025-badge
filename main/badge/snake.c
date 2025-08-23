@@ -21,15 +21,16 @@ static void snake_add_body(lv_obj_t *parent)
         return;
 
     int index = snake.size++;
-    snake.body[index] = lv_btn_create(parent, NULL);
-    lv_btn_toggle(snake.body[index]);
+    snake.body[index] = lv_btn_create(parent);
+    // TODO togggle
+    //lv_btn_toggle(snake.body[index]);
     lv_obj_set_size(snake.body[index], UI_SNAKE_BODY_SIZE, UI_SNAKE_BODY_SIZE);
 }
 
 void snake_reset(lv_obj_t *parent)
 {
-    if(snake_task_handle)
-        lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_OFF);
+    if(snake_timer_handle)
+        lv_timer_pause(snake_timer_handle);
 
     srand(lv_tick_get());
 
@@ -46,7 +47,7 @@ void snake_reset(lv_obj_t *parent)
     }
 
     snake_add_body(parent); // head
-    snake.eye = lv_label_create(snake.body[0], NULL);
+    snake.eye = lv_label_create(snake.body[0]);
     snake_set_dir(SNAKE_DIR_RIGHT);
     lv_obj_set_pos(snake.body[0], UI_SNAKE_BODY_SIZE * 3, UI_SNAKE_BODY_SIZE * 6);
 
@@ -60,11 +61,11 @@ void snake_reset(lv_obj_t *parent)
 
 static int counter = 0;
 
-void snake_task(lv_task_t *arg)
+void snake_timer(lv_timer_t *arg)
 {
     // not current page, ignore.
     if (lv_scr_act() != screen_snake){
-        lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_OFF);
+        lv_timer_pause(snake_timer_handle);
         return;
     }
 
@@ -128,7 +129,7 @@ void snake_task(lv_task_t *arg)
     // if no food exists, we need to generate one in random place.
     else
     {
-        snake.food = lv_btn_create(screen_snake, NULL);
+        snake.food = lv_btn_create(screen_snake);
         lv_obj_set_size(snake.food, UI_SNAKE_BODY_SIZE, UI_SNAKE_BODY_SIZE);
         lv_obj_set_pos(snake.food,
                        (rand() % LV_HOR_RES) / UI_SNAKE_BODY_SIZE * UI_SNAKE_BODY_SIZE,

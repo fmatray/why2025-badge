@@ -23,7 +23,7 @@ static lv_obj_t *person_organization;
 static lv_obj_t *person_job;
 static lv_obj_t *person_message;
 
-static lv_obj_t *socialenergy_gauge;
+static lv_obj_t *socialenergy_meter;
 
 static lv_obj_t *radar_node[MAX_NEARBY_NODE] = {0};
 static lv_obj_t *radar_node_number[MAX_NEARBY_NODE] = {0};
@@ -46,21 +46,21 @@ static int8_t counter_screen = -1; // Initialize to invalid screen index
 void ui_update_ip_info(void);
 void ui_list_all_netifs(void);
 
-void restore_current_task(){
+void restore_current_timer(){
     if(current_screen == SCREEN_RSSI){
-        lv_task_set_prio(rssi_task_handle, LV_TASK_PRIO_LOW);
+        lv_timer_resume(rssi_timer_handle);
     }
     else if(current_screen == SCREEN_RADAR){
-        lv_task_set_prio(radar_task_handle, LV_TASK_PRIO_LOW);
+        lv_timer_resume(radar_timer_handle);
     }
 }
 
-void pause_current_task(){
+void pause_current_timer(){
     if(current_screen == SCREEN_RSSI){
-        lv_task_set_prio(rssi_task_handle, LV_TASK_PRIO_OFF);
+        lv_timer_pause(rssi_timer_handle);
     }
     else if(current_screen == SCREEN_RADAR){
-        lv_task_set_prio(radar_task_handle, LV_TASK_PRIO_OFF);
+        lv_timer_pause(radar_timer_handle);
     }
 }
 
@@ -78,13 +78,13 @@ static bool ui_update_backlight(bool trigger)
         set_screen_led_backlight(badge_obj.brightness_max);
         last_trigger = lv_tick_get();
 
-        restore_current_task();
+        restore_current_timer();
     }
     else
     {
         if (span > BRIGHT_OFF_TIMEOUT_MS){
             set_screen_led_backlight(badge_obj.brightness_off);
-            pause_current_task();
+            pause_current_timer();
         }
         else if (span > BRIGHT_MID_TIMEOUT_MS){
             set_screen_led_backlight(badge_obj.brightness_mid);
@@ -104,13 +104,13 @@ void ui_send_wifi_event(int event)
 }
 
 void scroll_up(lv_obj_t *screen){
-    lv_obj_t *page = lv_obj_get_child(screen, NULL);
-    lv_page_scroll_ver(page, 80);
+    lv_obj_t *page = lv_obj_get_child(screen, 0);
+    lv_obj_scroll_to_y(page, 80, LV_ANIM_OFF);
 }
 
 void scroll_down(lv_obj_t *screen){
-    lv_obj_t *page = lv_obj_get_child(screen, NULL);
-    lv_page_scroll_ver(page, -80);
+    lv_obj_t *page = lv_obj_get_child(screen, 0);
+    lv_obj_scroll_to_y(page, -80, LV_ANIM_OFF);
 }
 
 void ui_button_up()
@@ -155,25 +155,26 @@ void ui_button_up()
             ui_set_person(true);
             break;
       case SCREEN_SOCIALENERGY:
-            needle_value = lv_gauge_get_value(socialenergy_gauge, 0) - 5;
+            //TODO
+            /*needle_value = lv_meter_get_value(socialenergy_meter, 0) - 5;
             needle_value = needle_value < 0 ? 0 : needle_value; // Low limit to 0
-            lv_gauge_set_value(socialenergy_gauge, 0, needle_value);
+            lv_meter_set_value(socialenergy_meter, 0, needle_value);*/
         break;
       case SCREEN_SNAKE:
-            lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_LOW);
+            lv_timer_resume(snake_timer_handle);
             snake_set_dir(1);
             break;
         case SCREEN_ADMIN:
             switch(admin_state){
                 case ADMIN_STATE_OFF: // AP and STA disabled: enable AP
                     ui_send_wifi_event(EVENT_HOTSPOT_START);
-                    lv_obj_set_hidden(admin_switch_sta, true);
+                    lv_obj_add_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
                     admin_state = ADMIN_STATE_AP;
                     break;
                 case ADMIN_STATE_AP: // AP enabled: disable AP
                     ui_send_wifi_event(EVENT_HOTSPOT_STOP);
-                    lv_obj_set_hidden(admin_switch_sta, false);
-                    lv_obj_set_hidden(admin_ssid, true);
+                    lv_obj_clear_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_add_flag(admin_ssid, LV_OBJ_FLAG_HIDDEN);
                     admin_state = ADMIN_STATE_OFF;
                     break;
                 case ADMIN_STATE_STA: // STA connected: manual IP refresh
@@ -231,13 +232,14 @@ void ui_button_down()
             ui_set_person(false);
             break;
       case SCREEN_SOCIALENERGY:
-            needle_value = lv_gauge_get_value(socialenergy_gauge, 0) + 5;
+            //TODO
+            /* needle_value = lv_meter_get_value(socialenergy_meter, 0) + 5;
             needle_value = needle_value > 100 ? 100 : needle_value; // TOP limit to 100
-            lv_gauge_set_value(socialenergy_gauge, 0, needle_value);
+            lv_meter_set_value(socialenergy_meter, 0, needle_value); */
         break;
 
       case SCREEN_SNAKE:
-            lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_LOW);
+            lv_timer_resume(snake_timer_handle);
             snake_set_dir(-1);
             break;
         case SCREEN_ADMIN:
@@ -321,11 +323,11 @@ void ui_event_load()
     cJSON_Delete(schedule_json);
 }
 
-static void ui_rssi_task(lv_task_t *arg)
+static void ui_rssi_timer(lv_timer_t *arg)
 {
     if (lv_scr_act() != screen_rssi)
     {
-        lv_task_set_prio(rssi_task_handle, LV_TASK_PRIO_OFF);
+        lv_timer_pause(rssi_timer_handle);
         return;
     }
     
@@ -340,30 +342,30 @@ static void ui_rssi_task(lv_task_t *arg)
         if(!ble_nodes[i].active) continue;
         
         lv_table_set_cell_value(table_rssi, pos, 0, ble_nodes[i].name);
-        lv_table_set_cell_align(table_rssi, pos, 0, LV_LABEL_ALIGN_CENTER);
+        //lv_table_set_cell_align(table_rssi, pos, 0, LV_TEXT_ALIGN_CENTER);
 
         snprintf(buf, sizeof(buf), "%d dBm", ble_nodes[i].rssi);
         lv_table_set_cell_value(table_rssi, pos, 1, buf);
-        lv_table_set_cell_align(table_rssi, pos, 1, LV_LABEL_ALIGN_CENTER);
+        //lv_table_set_cell_align(table_rssi, pos, 1, LV_TEXT_ALIGN_CENTER);
 
         snprintf(buf, sizeof(buf), "0x0%d", ble_nodes[i].id);
         lv_table_set_cell_value(table_rssi, pos, 2, buf);
-        lv_table_set_cell_align(table_rssi, pos, 2, LV_LABEL_ALIGN_CENTER);
+        //lv_table_set_cell_align(table_rssi, pos, 2, LV_TEXT_ALIGN_CENTER);
 
         pos++;
     }
 }
 
-static void ui_backlight_task(lv_task_t *arg){
+static void ui_backlight_timer(lv_timer_t *arg){
     ui_update_backlight(false);
 }
 
-static void ui_radar_task(lv_task_t *arg)
+static void ui_radar_timer(lv_timer_t *arg)
 {
 
     if (lv_scr_act() != screen_radar)
     {
-        lv_task_set_prio(radar_task_handle, LV_TASK_PRIO_OFF);
+        lv_timer_pause(radar_timer_handle);
         return;
     }
 
@@ -416,10 +418,10 @@ static void ui_radar_task(lv_task_t *arg)
 
                     lv_obj_set_pos(radar_node[i], x, y);
                     lv_label_set_text_fmt(radar_node_number[i], "%d", ble_nodes[i].id);
-                    lv_obj_set_hidden(radar_node[i], false);
+                    lv_obj_clear_flag(radar_node[i], LV_OBJ_FLAG_HIDDEN);
                     lv_obj_fade_in(radar_node[i], 1000, 0);
                 } else {
-                    lv_obj_set_hidden(radar_node[i], true);
+                    lv_obj_add_flag(radar_node[i], LV_OBJ_FLAG_HIDDEN);
                 }
             }
         }
@@ -441,31 +443,31 @@ void ui_screen_event_init() {
     static lv_style_t style;
     lv_style_init(&style);
 
-    screen_event = lv_obj_create(NULL, NULL);
-    lv_obj_t *screen_event_page = lv_page_create(screen_event, NULL);
+    screen_event = lv_obj_create(NULL);
+    lv_obj_t *screen_event_page = lv_obj_create(screen_event);
 
-    lv_obj_t *scrollable = lv_page_get_scrollable(screen_event_page);
-    lv_cont_set_layout(scrollable, LV_LAYOUT_PRETTY_TOP);
-    lv_obj_set_style_local_pad_all(scrollable, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, 0);
-	lv_obj_set_style_local_pad_inner(scrollable, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, 0);
-    lv_obj_set_style_local_pad_all(screen_event_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
-    lv_obj_set_style_local_pad_inner(screen_event_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
-    lv_page_set_scrollbar_mode(screen_event_page, LV_SCROLLBAR_MODE_OFF);
+    //lv_obj_t *scrollable = lv_page_get_scrollable(screen_event_page);
+    //lv_obj_set_layout(scrollable, LV_LAYOUT_FLEX);
+    //lv_obj_set_style_local_pad_all(scrollable, LV_PART_MAIN, LV_STATE_DEFAULT, 0);
+	//lv_obj_set_style_local_pad_inner(scrollable, LV_PART_MAIN, LV_STATE_DEFAULT, 0);
+    //lv_obj_set_style_local_pad_all(screen_event_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
+    //lv_obj_set_style_local_pad_inner(screen_event_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
+    lv_obj_set_scrollbar_mode(screen_event_page, LV_SCROLLBAR_MODE_OFF);
 
     lv_obj_set_size(screen_event_page, LV_HOR_RES, LV_VER_RES);
-    lv_coord_t content_w = lv_obj_get_width_grid(screen_event_page, 2, 1);
+    //lv_coord_t content_w = lv_obj_get_width_grid(screen_event_page, 2, 1);
 
-    lv_style_set_text_font(&style, LV_OBJ_PART_MAIN, &lv_font_montserrat_14);
+    lv_style_set_text_font(&style, &lv_font_montserrat_14);
 
-    table_event = lv_table_create(screen_event_page, NULL);
-    lv_obj_clean_style_list(table_event, LV_TABLE_PART_BG);
-    lv_obj_set_drag_parent(table_event, true);
+    table_event = lv_table_create(screen_event_page);
+    //lv_obj_clean_style_list(table_event, LV_PART_MAIN);
+    //lv_obj_set_drag_parent(table_event, true);
     lv_table_set_col_cnt(table_event, 2);
-    lv_table_set_col_width(table_event, 0, 4*(2 * content_w)/10);
-    lv_table_set_col_width(table_event, 1, 6*(2 * content_w)/10);
-    lv_obj_add_style(table_event, LV_OBJ_PART_MAIN, &style);
+    //lv_table_set_col_width(table_event, 0, 4*(2 * content_w)/10);
+    //lv_table_set_col_width(table_event, 1, 6*(2 * content_w)/10);
+    lv_obj_add_style(table_event,  &style, LV_PART_MAIN);
 
-    lv_obj_align(table_event, screen_event_page, LV_ALIGN_OUT_TOP_LEFT, 0, 0);
+    lv_obj_align_to(table_event, screen_event_page, LV_ALIGN_OUT_TOP_LEFT, 0, 0);
 
     ui_event_load(); 
 
@@ -475,17 +477,18 @@ void ui_screen_event_init() {
 void ui_screen_splash_init(){
     LV_IMG_DECLARE(img_logo);
 
-    screen_logo = lv_obj_create(NULL, NULL);
+    screen_logo = lv_obj_create(NULL);
+    lv_obj_clear_flag(screen_logo, LV_OBJ_FLAG_SCROLLABLE);
 
-    lv_obj_t *logo = lv_img_create(screen_logo, NULL);
+    lv_obj_t *logo = lv_img_create(screen_logo);
     lv_img_set_src(logo, &img_logo);
-    lv_obj_align(logo, NULL, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(logo, LV_ALIGN_CENTER, 0, 0);
   /*Change the logo's background color*/
     static lv_style_t style;
     lv_style_init(&style);
-    lv_style_set_bg_opa(&style, LV_STATE_DEFAULT, LV_OPA_COVER);
-    lv_style_set_bg_color(&style, LV_STATE_DEFAULT, LV_COLOR_MAKE(0x34, 0x3a, 0x40));
-    lv_obj_add_style(logo, LV_OBJ_PART_MAIN, &style);
+    lv_style_set_bg_opa(&style, LV_OPA_COVER);
+    lv_style_set_bg_color(&style, lv_color_hex(0x343a40));
+    lv_obj_add_style(logo, &style, LV_PART_MAIN);
 
     screens[SCREEN_LOGO] = screen_logo;
 }
@@ -508,92 +511,99 @@ void ui_screen_person_init() {
     /* Styling */
     static lv_style_t style_name;
     lv_style_init(&style_name);
-    lv_style_set_text_font(&style_name, LV_OBJ_PART_MAIN, &lv_font_montserrat_22);
-    lv_style_set_text_decor(&style_name, LV_STATE_DEFAULT, LV_TEXT_DECOR_UNDERLINE);
+    lv_style_set_text_font(&style_name, &lv_font_montserrat_22);
+    lv_style_set_text_decor(&style_name, LV_TEXT_DECOR_UNDERLINE);
 
 
     static lv_style_t style_organization_job;
     lv_style_init(&style_organization_job);
-    lv_style_set_text_font(&style_organization_job, LV_OBJ_PART_MAIN, &lv_font_montserrat_18);
+    lv_style_set_text_font(&style_organization_job, &lv_font_montserrat_18);
 
     /* Screen and labels creation */
-    screen_person = lv_obj_create(NULL, NULL);
+    screen_person = lv_obj_create(NULL);
+    lv_obj_clear_flag(screen_person, LV_OBJ_FLAG_SCROLLABLE);
 
-    person_name = lv_label_create(screen_person, NULL);    /*Used as a base label*/
-    lv_label_set_long_mode(person_name, LV_LABEL_LONG_BREAK);     /*Break the long lines*/
+    person_name = lv_label_create(screen_person);    /*Used as a base label*/
+    lv_label_set_long_mode(person_name, LV_LABEL_LONG_WRAP);     /*Break the long lines*/
     lv_label_set_recolor(person_name, true);                      /*Enable re-coloring by commands in the text*/
-    lv_label_set_align(person_name, LV_LABEL_ALIGN_CENTER);       /*Center aligned lines*/
+    lv_obj_set_style_text_align(person_name, LV_TEXT_ALIGN_CENTER, 0);       /*Center aligned lines*/
     lv_obj_set_width(person_name, NAME_LABEL_SIZE);
-    lv_obj_align(person_name, NULL, LV_ALIGN_CENTER, 0, -60);
+    lv_obj_align(person_name, LV_ALIGN_CENTER, 0, -60);
     
-    person_organization = lv_label_create(screen_person, person_name);
-    lv_obj_align(person_organization, NULL, LV_ALIGN_CENTER, 0, -30);
+    person_organization = lv_label_create(screen_person);
+    lv_obj_align(person_organization, LV_ALIGN_CENTER, 0, -30);
 
-    person_job = lv_label_create(screen_person, person_name);
-    lv_obj_align(person_job, NULL, LV_ALIGN_CENTER, 0, 0);
+    person_job = lv_label_create(screen_person);
+    lv_obj_align(person_job, LV_ALIGN_CENTER, 0, 0);
 
-    person_message = lv_label_create(screen_person, person_name);
-    lv_obj_align(person_message, NULL, LV_ALIGN_CENTER, 0, 60);
+    person_message = lv_label_create(screen_person);
+    lv_obj_align(person_message, LV_ALIGN_CENTER, 0, 60);
 
     /* Setting styles */
-    lv_obj_add_style(person_name, LV_OBJ_PART_MAIN, &style_name);
-    lv_obj_add_style(person_organization, LV_OBJ_PART_MAIN, &style_organization_job);
-    lv_obj_add_style(person_job, LV_OBJ_PART_MAIN, &style_organization_job);
+    lv_obj_add_style(person_name, &style_name, LV_PART_MAIN);
+    lv_obj_add_style(person_organization, &style_organization_job, LV_PART_MAIN);
+    lv_obj_add_style(person_job, &style_organization_job, LV_PART_MAIN);
     /* Stetting texts */
     ui_set_person(false);
     screens[SCREEN_PERSON] = screen_person;
 }
 
 void ui_screen_socialenergy_init() {
-    /* Gauge Style */
-    static lv_style_t gauge_style;
-    lv_style_init(&gauge_style);
-
-    lv_style_set_pad_inner(&gauge_style, LV_STATE_DEFAULT, 5);                  // Padding
+    screen_socialenergy = lv_obj_create(NULL);
+    lv_obj_clear_flag(screen_socialenergy, LV_OBJ_FLAG_SCROLLABLE);
     
-    lv_style_set_line_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_GREEN);      
-    lv_style_set_scale_grad_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_GREEN);
-    lv_style_set_scale_end_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_GREEN);
 
-    lv_style_set_line_width(&gauge_style, LV_STATE_DEFAULT, 2);
-    lv_style_set_scale_end_line_width(&gauge_style, LV_STATE_DEFAULT, 4);
-    lv_style_set_scale_end_border_width(&gauge_style, LV_STATE_DEFAULT, 4);
+    socialenergy_meter = lv_meter_create(screen_socialenergy);
+    lv_obj_center(socialenergy_meter);
+    lv_obj_set_size(socialenergy_meter, 180, 180);
 
-    /* Needle style */
-    static lv_style_t needle_style;
-    lv_style_init(&needle_style);
-    lv_style_set_line_width(&needle_style, LV_STATE_DEFAULT, 5);
-    lv_style_set_line_color(&needle_style, LV_STATE_DEFAULT, LV_COLOR_BLACK);
+    /*Add a scale first*/
+    lv_meter_scale_t * scale = lv_meter_add_scale(socialenergy_meter);
+    lv_meter_set_scale_ticks(socialenergy_meter, scale, 41, 2, 10, lv_palette_main(LV_PALETTE_GREY));
+    lv_meter_set_scale_major_ticks(socialenergy_meter, scale, 8, 4, 15, lv_color_black(), 10);
 
-    screen_socialenergy = lv_obj_create(NULL, NULL);
-    /*Describe the color for the needles*/
-    static lv_color_t needle_colors[0];
-    needle_colors[0] = LV_COLOR_BLACK;
+    lv_meter_indicator_t * indic;
 
-    /*Create a gauge*/
-    socialenergy_gauge = lv_gauge_create(screen_socialenergy, NULL);
+    /*Add a red arc to the start*/
+    indic = lv_meter_add_arc(socialenergy_meter,scale, 3, lv_palette_main(LV_PALETTE_RED), 0);
+    lv_meter_set_indicator_start_value(socialenergy_meter,indic, 0);
+    lv_meter_set_indicator_end_value(socialenergy_meter,indic, 20);
 
-    lv_obj_add_style(socialenergy_gauge, LV_GAUGE_PART_MAIN, &gauge_style);
-    lv_obj_add_style(socialenergy_gauge, LV_GAUGE_PART_NEEDLE, &needle_style);
-    lv_gauge_set_needle_count(socialenergy_gauge, 1, needle_colors);
-    lv_obj_set_size(socialenergy_gauge, 180, 180);
-    lv_obj_align(socialenergy_gauge, NULL, LV_ALIGN_IN_TOP_MID, 0, 10);
+    /*Make the tick lines blue at the start of the scale*/
+    indic = lv_meter_add_scale_lines(socialenergy_meter,scale, lv_palette_main(LV_PALETTE_RED), lv_palette_main(LV_PALETTE_RED),
+                                     false, 0);
+    lv_meter_set_indicator_start_value(socialenergy_meter,indic, 0);
+    lv_meter_set_indicator_end_value(socialenergy_meter,indic, 20);
+
+    /*Add a green arc to the end*/
+    indic = lv_meter_add_arc(socialenergy_meter,scale, 3, lv_palette_main(LV_PALETTE_GREEN), 0);
+    lv_meter_set_indicator_start_value(socialenergy_meter,indic, 80);
+    lv_meter_set_indicator_end_value(socialenergy_meter,indic, 100);
+
+    /*Make the tick lines red at the end of the scale*/
+    indic = lv_meter_add_scale_lines(socialenergy_meter,scale, lv_palette_main(LV_PALETTE_GREEN), lv_palette_main(LV_PALETTE_GREEN), false,
+                                     0);
+    lv_meter_set_indicator_start_value(socialenergy_meter,indic, 80);
+    lv_meter_set_indicator_end_value(socialenergy_meter,indic, 100);
+
+    /*Add a needle line indicator*/
+    indic = lv_meter_add_needle_line(socialenergy_meter,scale, 4, lv_palette_main(LV_PALETTE_GREY), -10);
 
     /*Set the values*/
-    lv_gauge_set_value(socialenergy_gauge, 0, 100);
+    lv_meter_set_indicator_value(socialenergy_meter, indic, 100);
 
     /* Label */
     static lv_style_t style_label;
     lv_style_init(&style_label);
-    lv_style_set_text_font(&style_label, LV_OBJ_PART_MAIN, &lv_font_montserrat_22);
+    lv_style_set_text_font(&style_label, &lv_font_montserrat_22);
 
-    lv_obj_t *label = lv_label_create(screen_socialenergy, NULL);
-    lv_label_set_long_mode(label, LV_LABEL_LONG_BREAK);     /*Break the long lines*/
+    lv_obj_t *label = lv_label_create(screen_socialenergy);
+    lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);     /*Break the long lines*/
     lv_label_set_recolor(label, true);                      /*Enable re-coloring by commands in the text*/
-    lv_label_set_align(label, LV_LABEL_ALIGN_CENTER);       /*Center aligned lines*/
+    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);       /*Center aligned lines*/
     lv_obj_set_width(label, NAME_LABEL_SIZE);
-    lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 90);
-    lv_obj_add_style(label, LV_OBJ_PART_MAIN, &style_label);
+    lv_obj_align(label, LV_ALIGN_CENTER, 0, 90);
+    lv_obj_add_style(label, &style_label, LV_PART_MAIN);
 
     lv_label_set_text(label, "Social Energy");
 
@@ -604,18 +614,23 @@ void ui_screen_radar_init(){
     // Page for radar
     LV_IMG_DECLARE(img_radar);
     
-    screen_radar = lv_obj_create(NULL, NULL);
-    lv_obj_t *img = lv_img_create(screen_radar, NULL);
+    screen_radar = lv_obj_create(NULL);
+    lv_obj_t *img = lv_img_create(screen_radar);
     lv_img_set_src(img, &img_radar);
-    lv_obj_align(img, NULL, LV_ALIGN_IN_TOP_LEFT, 0, 0);
+    lv_obj_align(img, LV_ALIGN_TOP_LEFT, 0, 0);
 
     for (int i = 0; i < sizeof(radar_node) / sizeof(lv_obj_t *); i++)
     {
-        radar_node[i] = lv_btn_create(img, NULL);
+        radar_node[i] = lv_btn_create(img);
         lv_obj_set_size(radar_node[i], 20, 20);
-        lv_btn_toggle(radar_node[i]); // set to solid color.
-        lv_obj_set_hidden(radar_node[i], true);
-        radar_node_number[i] = lv_label_create(radar_node[i], NULL);
+        lv_obj_get_state(radar_node[i]);
+        lv_state_t button_state = lv_obj_get_state(radar_node[i]); // set to solid color.
+        if (button_state == LV_STATE_PRESSED)
+          lv_obj_clear_state(radar_node[i], LV_STATE_PRESSED);
+        else
+            lv_obj_add_state(radar_node[i], LV_STATE_PRESSED);
+        lv_obj_add_flag(radar_node[i], LV_OBJ_FLAG_HIDDEN);
+        radar_node_number[i] = lv_label_create(radar_node[i]);
         lv_label_set_text(radar_node_number[i], "X");
     }
 
@@ -627,80 +642,80 @@ void ui_screen_rssi_init(){
     static lv_style_t style;
     lv_style_init(&style);
 
-    screen_rssi = lv_obj_create(NULL, NULL);
-    lv_obj_t *screen_rssi_page = lv_page_create(screen_rssi, NULL);
+    screen_rssi = lv_obj_create(NULL);
+    lv_obj_t *screen_rssi_page = lv_obj_create(screen_rssi);
 
-    lv_obj_t *scrollable = lv_page_get_scrollable(screen_rssi_page);
-    lv_cont_set_layout(scrollable, LV_LAYOUT_PRETTY_TOP);
-    lv_obj_set_style_local_pad_all(scrollable, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, 0);
-	lv_obj_set_style_local_pad_inner(scrollable, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, 0);
-    lv_obj_set_style_local_pad_all(screen_rssi_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
-    lv_obj_set_style_local_pad_inner(screen_rssi_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
-    lv_page_set_scrollbar_mode(screen_rssi_page, LV_SCROLLBAR_MODE_OFF);
+    //lv_obj_t *scrollable = lv_page_get_scrollable(screen_rssi_page);
+    //lv_obj_set_layout(scrollable, LV_LAYOUT_FLEX);
+    //lv_obj_set_style_local_pad_all(scrollable, LV_PART_MAIN, LV_STATE_DEFAULT, 0);
+	//lv_obj_set_style_local_pad_inner(scrollable, LV_PART_MAIN, LV_STATE_DEFAULT, 0);
+    //lv_obj_set_style_local_pad_all(screen_rssi_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
+    //lv_obj_set_style_local_pad_inner(screen_rssi_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
+    lv_obj_set_scrollbar_mode(screen_rssi_page, LV_SCROLLBAR_MODE_OFF);
 
     lv_obj_set_size(screen_rssi_page, LV_HOR_RES, LV_VER_RES);
-    lv_coord_t content_w = lv_obj_get_width_grid(screen_rssi_page, 3, 1);
+    //lv_coord_t content_w = lv_obj_get_width_grid(screen_rssi_page, 3, 1);
 
-    lv_style_set_text_font(&style, LV_OBJ_PART_MAIN, &lv_font_montserrat_14);
+    lv_style_set_text_font(&style, &lv_font_montserrat_14);
 
-    table_rssi = lv_table_create(screen_rssi_page, NULL);
-    lv_obj_clean_style_list(table_rssi, LV_TABLE_PART_BG);
-    lv_obj_set_drag_parent(table_rssi, true);
+    table_rssi = lv_table_create(screen_rssi_page);
+    //lv_obj_clean_style_list(table_rssi, LV_PART_MAIN);
+    //lv_obj_set_drag_parent(table_rssi, true);
     lv_table_set_col_cnt(table_rssi, 3);
-    lv_table_set_col_width(table_rssi, 0, content_w);
-    lv_table_set_col_width(table_rssi, 1, content_w);
-    lv_table_set_col_width(table_rssi, 2, content_w);
-    lv_obj_add_style(table_rssi, LV_OBJ_PART_MAIN, &style);
+    //lv_table_set_col_width(table_rssi, 0, content_w);
+    //lv_table_set_col_width(table_rssi, 1, content_w);
+    //lv_table_set_col_width(table_rssi, 2, content_w);
+    lv_obj_add_style(table_rssi, &style, LV_PART_MAIN);
 
-    lv_obj_align(table_rssi, screen_rssi_page, LV_ALIGN_OUT_TOP_LEFT, 0, 0);
+    lv_obj_align_to(table_rssi, screen_rssi_page, LV_ALIGN_OUT_TOP_LEFT, 0, 0);
 
     lv_table_set_cell_value(table_rssi, 0, 0, "NAME");
     lv_table_set_cell_value(table_rssi, 0, 1, "RSSI");
     lv_table_set_cell_value(table_rssi, 0, 2, "ID");
 
-    lv_table_set_cell_align(table_rssi, 0, 0, LV_LABEL_ALIGN_CENTER);
-    lv_table_set_cell_align(table_rssi, 0, 1, LV_LABEL_ALIGN_CENTER);
-    lv_table_set_cell_align(table_rssi, 0, 2, LV_LABEL_ALIGN_CENTER);
+    //lv_table_set_cell_align(table_rssi, 0, 0, LV_TEXT_ALIGN_CENTER);
+    //lv_table_set_cell_align(table_rssi, 0, 1, LV_TEXT_ALIGN_CENTER);
+    //lv_table_set_cell_align(table_rssi, 0, 2, LV_TEXT_ALIGN_CENTER);
 
     screens[SCREEN_RSSI] = screen_rssi;
 }
 
 void ui_screen_admin_init(){
     // page for admin
-    screen_admin = lv_obj_create(NULL, NULL);
-    admin_switch = lv_btn_create(screen_admin, NULL);
+    screen_admin = lv_obj_create(NULL);
+    admin_switch = lv_btn_create(screen_admin);
     lv_obj_set_size(admin_switch, 200, 50);
     lv_obj_set_pos(admin_switch, 60, 35);
-    admin_switch_text = lv_label_create(admin_switch, NULL);
+    admin_switch_text = lv_label_create(admin_switch);
     lv_label_set_text(admin_switch_text, "TURN ON AP");
 
-    admin_sync = lv_btn_create(screen_admin, NULL);
+    admin_sync = lv_btn_create(screen_admin);
     lv_obj_set_size(admin_sync, 200, 50);
     lv_obj_set_pos(admin_sync, 60, 180);
-    admin_sync_text = lv_label_create(admin_sync, NULL);
+    admin_sync_text = lv_label_create(admin_sync);
     lv_label_set_text(admin_sync_text, "FORCE SCHEDULE SYNC");
-    lv_obj_set_hidden(admin_sync, true);
+    lv_obj_add_flag(admin_sync, LV_OBJ_FLAG_HIDDEN);
 
-    admin_ssid = lv_label_create(screen_admin, NULL);
-    lv_obj_align(admin_ssid, admin_switch, LV_ALIGN_OUT_BOTTOM_MID, -50, 10);
-    lv_obj_set_hidden(admin_ssid, true);
-    admin_pass = lv_label_create(screen_admin, NULL);
-    lv_obj_align(admin_pass, admin_switch, LV_ALIGN_OUT_BOTTOM_MID, -50, 30);
-    lv_obj_set_hidden(admin_pass, true);
+    admin_ssid = lv_label_create(screen_admin);
+    lv_obj_align_to(admin_ssid, admin_switch, LV_ALIGN_OUT_BOTTOM_MID, -50, 10);
+    lv_obj_add_flag(admin_ssid, LV_OBJ_FLAG_HIDDEN);
+    admin_pass = lv_label_create(screen_admin);
+    lv_obj_align_to(admin_pass, admin_switch, LV_ALIGN_OUT_BOTTOM_MID, -50, 30);
+    lv_obj_add_flag(admin_pass, LV_OBJ_FLAG_HIDDEN);
 
-    admin_client_ip = lv_label_create(screen_admin, NULL);
-    lv_obj_align(admin_client_ip, admin_switch, LV_ALIGN_OUT_BOTTOM_MID, -50, 50);
+    admin_client_ip = lv_label_create(screen_admin);
+    lv_obj_align_to(admin_client_ip, admin_switch, LV_ALIGN_OUT_BOTTOM_MID, -50, 50);
     lv_label_set_text(admin_client_ip, "Client IP: [Not Connected]");
-    lv_obj_set_hidden(admin_client_ip, true);
-    admin_gateway_ip = lv_label_create(screen_admin, NULL);
-    lv_obj_align(admin_gateway_ip, admin_switch, LV_ALIGN_OUT_BOTTOM_MID, -50, 70);
+    lv_obj_add_flag(admin_client_ip, LV_OBJ_FLAG_HIDDEN);
+    admin_gateway_ip = lv_label_create(screen_admin);
+    lv_obj_align_to(admin_gateway_ip, admin_switch, LV_ALIGN_OUT_BOTTOM_MID, -50, 70);
     lv_label_set_text(admin_gateway_ip, "Gateway: [Not Available]");
-    lv_obj_set_hidden(admin_gateway_ip, true);
+    lv_obj_add_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
 
-    admin_switch_sta = lv_btn_create(screen_admin, NULL);
+    admin_switch_sta = lv_btn_create(screen_admin);
     lv_obj_set_size(admin_switch_sta, 200, 50);
     lv_obj_set_pos(admin_switch_sta, 60, 180);
-    admin_switch_sta_text = lv_label_create(admin_switch_sta, NULL);
+    admin_switch_sta_text = lv_label_create(admin_switch_sta);
     lv_label_set_text(admin_switch_sta_text, "SYNC SCHEDULE");
 
     screens[SCREEN_ADMIN] = screen_admin;
@@ -708,7 +723,7 @@ void ui_screen_admin_init(){
 
 void ui_screen_snake_init(){
     // page for snake
-    screen_snake = lv_obj_create(NULL, NULL);
+    screen_snake = lv_obj_create(NULL);
     snake_reset(screen_snake);
 
     screens[SCREEN_SNAKE] = screen_snake;
@@ -726,8 +741,8 @@ void ui_ap_start_handler() {
     snprintf(buf, sizeof(buf), "PASS: %s", badge_obj.ap_password);
     lv_label_set_text(admin_pass, buf);
 
-    lv_obj_set_hidden(admin_ssid, false);
-    lv_obj_set_hidden(admin_pass, false);
+    lv_obj_clear_flag(admin_ssid, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(admin_pass, LV_OBJ_FLAG_HIDDEN);
 
     // Update IP information immediately
     ui_update_ip_info();
@@ -735,7 +750,7 @@ void ui_ap_start_handler() {
     // TODO: Also create a delayed task to retry getting IP info
     // xTaskCreate(ui_delayed_ip_update_task, "delayed_ip_update", 2048, NULL, 5, NULL);
 
-    lv_btn_set_state(admin_switch, LV_BTN_STATE_CHECKED_PRESSED);
+    lv_obj_add_state(admin_switch, LV_STATE_PRESSED | LV_STATE_CHECKED);
     admin_state = ADMIN_STATE_AP;
 }
 
@@ -743,13 +758,14 @@ void ui_ap_stop_handler(){
     ap_started = false;
 
     lv_label_set_text(admin_switch_text, "TURN ON AP");
-    lv_obj_set_hidden(admin_ssid, true);
-    lv_obj_set_hidden(admin_pass, true);
-    lv_obj_set_hidden(admin_client_ip, true);
-    lv_obj_set_hidden(admin_gateway_ip, true);
-    lv_obj_set_hidden(admin_switch_sta, false);
+    lv_obj_add_flag(admin_ssid, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(admin_pass, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(admin_client_ip, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
 
-    lv_btn_set_state(admin_switch, LV_BTN_STATE_RELEASED);//enabl(admin_switch);
+    lv_obj_clear_state(admin_switch, LV_STATE_PRESSED | LV_STATE_CHECKED);
+    //lv_btn_set_state(admin_switch, LV_BTN_STATE_RELEASED);//enabl(admin_switch);
     admin_state = ADMIN_STATE_OFF;
 }
 
@@ -759,8 +775,9 @@ void ui_sta_connected_handler(){
     ESP_LOGI("UI", "STA connected handler called");
     ESP_LOGI("UI", "Current admin_state: %d", admin_state);
     ESP_LOGI("UI", "Current screen: %d", current_screen);
-    
-    lv_btn_set_state(admin_switch_sta, LV_BTN_STATE_CHECKED_PRESSED);
+
+    lv_obj_add_state(admin_switch_sta, LV_STATE_PRESSED | LV_STATE_CHECKED);
+    //lv_btn_set_state(admin_switch_sta, LV_BTN_STATE_CHECKED_PRESSED);
     lv_label_set_text(admin_switch_sta_text, "Downloading...");
     
     // Update IP information when connected as station immediately
@@ -775,18 +792,19 @@ void ui_sta_connected_handler(){
 }
 
 void ui_sta_disconnected_handler(){
-    sta_connected = false;
-    lv_btn_set_state(admin_switch_sta, LV_BTN_STATE_RELEASED);
-    lv_obj_set_hidden(admin_client_ip, true);
-    lv_obj_set_hidden(admin_gateway_ip, true);
+  sta_connected = false;
+    lv_obj_clear_state(admin_switch_sta, LV_STATE_PRESSED | LV_STATE_CHECKED);
+    //lv_btn_set_state(admin_switch_sta, LV_BTN_STATE_RELEASED);
+    lv_obj_add_flag(admin_client_ip, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
     admin_state = ADMIN_STATE_OFF;
 }
 
 void ui_sta_stop_handler() {
     sta_connected = false;
     lv_label_set_text(admin_switch_sta_text, "SYNC SCHEDULE");
-    lv_obj_set_hidden(admin_client_ip, true);
-    lv_obj_set_hidden(admin_gateway_ip, true);
+    lv_obj_add_flag(admin_client_ip, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
     admin_state = ADMIN_STATE_OFF;
 }
 
@@ -795,15 +813,16 @@ void ui_connection_progress(uint8_t cur, uint8_t max){
         char buf[BADGE_BUF_SIZE + 20] = {0}; // Increase the size of buf to accommodate the entire formatted string
         snprintf(buf, sizeof(buf), "Connecting (%d/%d)", cur, max);
         lv_label_set_text(admin_switch_sta_text, buf);
-        lv_obj_set_hidden(admin_switch_sta_text, false);
+        lv_obj_clear_flag(admin_switch_sta_text, LV_OBJ_FLAG_HIDDEN);
     } else {
         lv_label_set_text(admin_switch_sta_text, "Connection failed!");
-        lv_obj_set_hidden(admin_switch_sta_text, false);
+        lv_obj_clear_flag(admin_switch_sta_text, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
-void ui_toggle_sync(){
-    lv_btn_set_state(admin_sync, LV_BTN_STATE_RELEASED);
+void ui_toggle_sync() {
+    lv_obj_clear_state(admin_sync, LV_STATE_PRESSED | LV_STATE_CHECKED);
+    //lv_btn_set_state(admin_sync, LV_BTN_STATE_RELEASED);
     ui_send_wifi_event(EVENT_STA_STOP);
 }
 
@@ -836,12 +855,12 @@ void ui_update_ip_info() {
                 // Show AP IP information
                 snprintf(buf, sizeof(buf), "AP IP: " IPSTR, IP2STR(&ip_info.ip));
                 lv_label_set_text(admin_client_ip, buf);
-                lv_obj_set_hidden(admin_client_ip, false);
+                lv_obj_clear_flag(admin_client_ip, LV_OBJ_FLAG_HIDDEN);
                 ESP_LOGI("UI", "Set admin_client_ip text to: %s", buf);
                 
                 snprintf(buf, sizeof(buf), "\nConnect to\nhttp://" IPSTR, IP2STR(&ip_info.gw));
                 lv_label_set_text(admin_gateway_ip, buf);
-                lv_obj_set_hidden(admin_gateway_ip, false);
+                lv_obj_clear_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
                 ESP_LOGI("UI", "Set admin_gateway_ip text to: %s", buf);
                 ESP_LOGI("UI", "Successfully displayed AP IP info");
                 return;
@@ -866,12 +885,12 @@ void ui_update_ip_info() {
                 ESP_LOGI("UI", "STA IP is valid, updating UI labels...");
                 snprintf(buf, sizeof(buf), "Client IP: " IPSTR, IP2STR(&ip_info.ip));
                 lv_label_set_text(admin_client_ip, buf);
-                lv_obj_set_hidden(admin_client_ip, false);
+                lv_obj_clear_flag(admin_client_ip, LV_OBJ_FLAG_HIDDEN);
                 ESP_LOGI("UI", "Set admin_client_ip text to: %s", buf);
                 
                 snprintf(buf, sizeof(buf), "Gateway: " IPSTR, IP2STR(&ip_info.gw));
                 lv_label_set_text(admin_gateway_ip, buf);
-                lv_obj_set_hidden(admin_gateway_ip, false);
+                lv_obj_clear_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
                 ESP_LOGI("UI", "Set admin_gateway_ip text to: %s", buf);
                 ESP_LOGI("UI", "Successfully displayed STA IP info");
                 return;
@@ -906,21 +925,21 @@ void ui_update_ip_info() {
                 // AP interface
                 snprintf(buf, sizeof(buf), "AP IP: " IPSTR, IP2STR(&ip_info.ip));
                 lv_label_set_text(admin_client_ip, buf);
-                lv_obj_set_hidden(admin_client_ip, false);
+                lv_obj_clear_flag(admin_client_ip, LV_OBJ_FLAG_HIDDEN);
                 
                 snprintf(buf, sizeof(buf), "\nConnect to\nhttp://" IPSTR, IP2STR(&ip_info.gw));
                 lv_label_set_text(admin_gateway_ip, buf);
-                lv_obj_set_hidden(admin_gateway_ip, false);
+                lv_obj_clear_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
                 ip_found = true;
             } else if (desc && strstr(desc, "sta")) {
                 // STA interface
                 snprintf(buf, sizeof(buf), "Client IP: " IPSTR, IP2STR(&ip_info.ip));
                 lv_label_set_text(admin_client_ip, buf);
-                lv_obj_set_hidden(admin_client_ip, false);
+                lv_obj_clear_flag(admin_client_ip, LV_OBJ_FLAG_HIDDEN);
                 
                 snprintf(buf, sizeof(buf), "\nConnect to\nhttp://" IPSTR, IP2STR(&ip_info.gw));
                 lv_label_set_text(admin_gateway_ip, buf);
-                lv_obj_set_hidden(admin_gateway_ip, false);
+                lv_obj_clear_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
                 ip_found = true;
             }
             ESP_LOGI("UI", "Successfully displayed IP info from interface iteration");
@@ -931,8 +950,8 @@ void ui_update_ip_info() {
     
     if (!ip_found) {
         ESP_LOGW("UI", "No valid IP information found to display");
-        lv_obj_set_hidden(admin_client_ip, true);
-        lv_obj_set_hidden(admin_gateway_ip, true);
+        lv_obj_add_flag(admin_client_ip, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
     }
     
     ESP_LOGI("UI", "=== END IP INFO DEBUG ===");
@@ -957,16 +976,20 @@ static void ui_init(void)
 
     ui_screen_snake_init();
     
-    radar_task_handle = lv_task_create(ui_radar_task, 2000, LV_TASK_PRIO_OFF, NULL);
-    rssi_task_handle = lv_task_create(ui_rssi_task, 2000, LV_TASK_PRIO_OFF, NULL);
-    snake_task_handle = lv_task_create(snake_task, 50, LV_TASK_PRIO_OFF, NULL);
+    radar_timer_handle = lv_timer_create(ui_radar_timer, 2000, NULL);
+    lv_timer_pause(radar_timer_handle);
+    rssi_timer_handle = lv_timer_create(ui_rssi_timer, 2000, NULL);
+    lv_timer_pause(rssi_timer_handle);
+    snake_timer_handle = lv_timer_create(snake_timer, 50, NULL);
+    lv_timer_pause(snake_timer_handle);
 
     // show first page.
     lv_scr_load(screens[current_screen]);
 
     // Turn on backlight and run backlight management task
     ui_update_backlight(true);
-    backlight_task_handle = lv_task_create(ui_backlight_task, 1000, LV_TASK_PRIO_LOW, NULL);
+    backlight_timer_handle = lv_timer_create(ui_backlight_timer, 1000, NULL);
+    lv_timer_pause(backlight_timer_handle);
 
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_START, &ui_ap_start_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STOP, &ui_ap_stop_handler, NULL));
@@ -991,14 +1014,14 @@ void ui_task(void *arg)
     lv_color_t *buf1 = (lv_color_t*) heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA);
     lv_color_t *buf2 = (lv_color_t*) heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA);
 
-    static lv_disp_buf_t disp_buf;
+    static lv_disp_draw_buf_t disp_buf;
     uint32_t size_in_px = DISP_BUF_SIZE;
 
-    lv_disp_buf_init(&disp_buf, buf1, buf2, size_in_px);
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, size_in_px);
     lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
     disp_drv.flush_cb = disp_driver_flush;
-    disp_drv.buffer = &disp_buf;
+    disp_drv.draw_buf = &disp_buf;
     lv_disp_drv_register(&disp_drv);
 
     const esp_timer_create_args_t periodic_timer_args = {
@@ -1019,7 +1042,7 @@ void ui_task(void *arg)
         /* Try to take the semaphore, call lvgl related function on success */
         if (pdTRUE == xSemaphoreTake(xGuiSemaphore, portMAX_DELAY))
         {
-            lv_task_handler();
+            lv_timer_handler();
             xSemaphoreGive(xGuiSemaphore);
         }
     }
@@ -1039,7 +1062,7 @@ void ui_switch_page_down()
 
     lv_scr_load_anim(screens[current_screen], LV_SCR_LOAD_ANIM_OVER_TOP, 300, 0, false);
 
-    restore_current_task();
+    restore_current_timer();
 }
 
 void ui_switch_page_up()
@@ -1052,7 +1075,7 @@ void ui_switch_page_up()
     
     lv_scr_load_anim(screens[current_screen], LV_SCR_LOAD_ANIM_OVER_BOTTOM, 300, 0, false);
 
-    restore_current_task();
+    restore_current_timer();
 }
 
 void button_task(void *arg)

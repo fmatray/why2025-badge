@@ -34,6 +34,6 @@ typedef struct
 
 void snake_set_dir(int8_t dir);
 void snake_reset(lv_obj_t *parent);
-void snake_task(lv_task_t *arg);
+void snake_timer(lv_timer_t *arg);
 
 #endif

@@ -48,10 +48,10 @@ lv_obj_t *screen_rssi;          // page 5
 lv_obj_t *screen_snake;         // page 6
 lv_obj_t *screen_admin;         // page 7
 
-lv_task_t* snake_task_handle;
-lv_task_t* radar_task_handle;
-lv_task_t* rssi_task_handle;
-lv_task_t* backlight_task_handle;
+lv_timer_t* snake_timer_handle;
+lv_timer_t* radar_timer_handle;
+lv_timer_t* rssi_timer_handle;
+lv_timer_t* backlight_timer_handle;
 
 void ui_task(void *);
 void button_task(void *arg);
