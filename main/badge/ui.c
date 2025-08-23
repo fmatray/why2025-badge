@@ -12,7 +12,7 @@ enum screen_order {
   SCREEN_SNAKE,
   NUM_SCREENS
 };
-const int nb_screens = 9;
+const int nb_screens = NUM_SCREENS + 1;
 static lv_obj_t* screens[NUM_SCREENS];
 static int8_t current_screen = SCREEN_LOGO;
 
@@ -47,21 +47,17 @@ void ui_update_ip_info(void);
 void ui_list_all_netifs(void);
 
 void restore_current_timer(){
-    if(current_screen == SCREEN_RSSI){
+    if(current_screen == SCREEN_RSSI)
         lv_timer_resume(rssi_timer_handle);
-    }
-    else if(current_screen == SCREEN_RADAR){
+    else if(current_screen == SCREEN_RADAR)
         lv_timer_resume(radar_timer_handle);
-    }
 }
 
 void pause_current_timer(){
-    if(current_screen == SCREEN_RSSI){
+    if(current_screen == SCREEN_RSSI)
         lv_timer_pause(rssi_timer_handle);
-    }
-    else if(current_screen == SCREEN_RADAR){
+    else if(current_screen == SCREEN_RADAR)
         lv_timer_pause(radar_timer_handle);
-    }
 }
 
 /*
@@ -104,13 +100,13 @@ void ui_send_wifi_event(int event)
 }
 
 void scroll_up(lv_obj_t *screen){
-    lv_obj_t *page = lv_obj_get_child(screen, 0);
-    lv_obj_scroll_to_y(page, 80, LV_ANIM_OFF);
+    lv_obj_t *object = lv_obj_get_child(screen, 0);
+    lv_obj_scroll_by(object, 0, 80, LV_ANIM_ON);
 }
 
 void scroll_down(lv_obj_t *screen){
-    lv_obj_t *page = lv_obj_get_child(screen, 0);
-    lv_obj_scroll_to_y(page, -80, LV_ANIM_OFF);
+    lv_obj_t *object = lv_obj_get_child(screen, 0);
+    lv_obj_scroll_by(object, 0, -80, LV_ANIM_ON);
 }
 
 void ui_button_up()
@@ -444,32 +440,21 @@ void ui_screen_event_init() {
     lv_style_init(&style);
 
     screen_event = lv_obj_create(NULL);
-    lv_obj_t *screen_event_page = lv_obj_create(screen_event);
-
-    //lv_obj_t *scrollable = lv_page_get_scrollable(screen_event_page);
-    //lv_obj_set_layout(scrollable, LV_LAYOUT_FLEX);
-    //lv_obj_set_style_local_pad_all(scrollable, LV_PART_MAIN, LV_STATE_DEFAULT, 0);
-	//lv_obj_set_style_local_pad_inner(scrollable, LV_PART_MAIN, LV_STATE_DEFAULT, 0);
-    //lv_obj_set_style_local_pad_all(screen_event_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
-    //lv_obj_set_style_local_pad_inner(screen_event_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
-    lv_obj_set_scrollbar_mode(screen_event_page, LV_SCROLLBAR_MODE_OFF);
-
-    lv_obj_set_size(screen_event_page, LV_HOR_RES, LV_VER_RES);
-    //lv_coord_t content_w = lv_obj_get_width_grid(screen_event_page, 2, 1);
+    lv_obj_set_scrollbar_mode(screen_event, LV_SCROLLBAR_MODE_OFF);
 
     lv_style_set_text_font(&style, &lv_font_montserrat_14);
 
-    table_event = lv_table_create(screen_event_page);
-    //lv_obj_clean_style_list(table_event, LV_PART_MAIN);
-    //lv_obj_set_drag_parent(table_event, true);
+    table_event = lv_table_create(screen_event);
     lv_table_set_col_cnt(table_event, 2);
-    //lv_table_set_col_width(table_event, 0, 4*(2 * content_w)/10);
-    //lv_table_set_col_width(table_event, 1, 6*(2 * content_w)/10);
     lv_obj_add_style(table_event,  &style, LV_PART_MAIN);
 
-    lv_obj_align_to(table_event, screen_event_page, LV_ALIGN_OUT_TOP_LEFT, 0, 0);
+    lv_obj_set_align(table_event, LV_ALIGN_TOP_MID);
+    ui_event_load();
 
-    ui_event_load(); 
+    lv_obj_set_width(table_event, lv_pct(100));
+    
+    lv_table_set_col_width(table_event, 0, LV_HOR_RES / 2);
+    lv_table_set_col_width(table_event, 1, LV_HOR_RES / 2);
 
     screens[SCREEN_EVENT] = screen_event;
 }
@@ -554,7 +539,8 @@ void ui_screen_socialenergy_init() {
     
 
     socialenergy_meter = lv_meter_create(screen_socialenergy);
-    lv_obj_center(socialenergy_meter);
+    lv_obj_set_align(socialenergy_meter, LV_ALIGN_TOP_MID);
+    lv_obj_set_pos(socialenergy_meter, 0, 10);
     lv_obj_set_size(socialenergy_meter, 180, 180);
 
     /*Add a scale first*/
@@ -637,45 +623,34 @@ void ui_screen_radar_init(){
     screens[SCREEN_RADAR] = screen_radar;
 }
 
+
 void ui_screen_rssi_init(){
     // page for rssi
     static lv_style_t style;
     lv_style_init(&style);
 
     screen_rssi = lv_obj_create(NULL);
-    lv_obj_t *screen_rssi_page = lv_obj_create(screen_rssi);
-
-    //lv_obj_t *scrollable = lv_page_get_scrollable(screen_rssi_page);
-    //lv_obj_set_layout(scrollable, LV_LAYOUT_FLEX);
-    //lv_obj_set_style_local_pad_all(scrollable, LV_PART_MAIN, LV_STATE_DEFAULT, 0);
-	//lv_obj_set_style_local_pad_inner(scrollable, LV_PART_MAIN, LV_STATE_DEFAULT, 0);
-    //lv_obj_set_style_local_pad_all(screen_rssi_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
-    //lv_obj_set_style_local_pad_inner(screen_rssi_page, LV_PAGE_PART_BG, LV_STATE_DEFAULT, 0);
-    lv_obj_set_scrollbar_mode(screen_rssi_page, LV_SCROLLBAR_MODE_OFF);
-
-    lv_obj_set_size(screen_rssi_page, LV_HOR_RES, LV_VER_RES);
-    //lv_coord_t content_w = lv_obj_get_width_grid(screen_rssi_page, 3, 1);
+    lv_obj_set_scrollbar_mode(screen_rssi, LV_SCROLLBAR_MODE_OFF);
 
     lv_style_set_text_font(&style, &lv_font_montserrat_14);
 
-    table_rssi = lv_table_create(screen_rssi_page);
-    //lv_obj_clean_style_list(table_rssi, LV_PART_MAIN);
-    //lv_obj_set_drag_parent(table_rssi, true);
+    table_rssi = lv_table_create(screen_rssi);
+    lv_obj_set_scrollbar_mode(table_rssi, LV_SCROLLBAR_MODE_OFF);
     lv_table_set_col_cnt(table_rssi, 3);
-    //lv_table_set_col_width(table_rssi, 0, content_w);
-    //lv_table_set_col_width(table_rssi, 1, content_w);
-    //lv_table_set_col_width(table_rssi, 2, content_w);
-    lv_obj_add_style(table_rssi, &style, LV_PART_MAIN);
+    lv_obj_add_style(table_rssi,  &style, LV_PART_MAIN);
 
-    lv_obj_align_to(table_rssi, screen_rssi_page, LV_ALIGN_OUT_TOP_LEFT, 0, 0);
+    lv_obj_set_align(table_rssi, LV_ALIGN_TOP_MID);
 
     lv_table_set_cell_value(table_rssi, 0, 0, "NAME");
     lv_table_set_cell_value(table_rssi, 0, 1, "RSSI");
     lv_table_set_cell_value(table_rssi, 0, 2, "ID");
 
-    //lv_table_set_cell_align(table_rssi, 0, 0, LV_TEXT_ALIGN_CENTER);
-    //lv_table_set_cell_align(table_rssi, 0, 1, LV_TEXT_ALIGN_CENTER);
-    //lv_table_set_cell_align(table_rssi, 0, 2, LV_TEXT_ALIGN_CENTER);
+    lv_obj_set_width(table_rssi, lv_pct(100));
+    lv_obj_set_height(table_rssi, lv_pct(100));
+    
+    lv_table_set_col_width(table_rssi, 0, LV_HOR_RES / 3);
+    lv_table_set_col_width(table_rssi, 1, LV_HOR_RES / 3);
+    lv_table_set_col_width(table_rssi, 2, LV_HOR_RES / 3);
 
     screens[SCREEN_RSSI] = screen_rssi;
 }
@@ -683,6 +658,7 @@ void ui_screen_rssi_init(){
 void ui_screen_admin_init(){
     // page for admin
     screen_admin = lv_obj_create(NULL);
+    /* ADMIN SWITCH */
     admin_switch = lv_btn_create(screen_admin);
     lv_obj_set_size(admin_switch, 200, 50);
     lv_obj_set_pos(admin_switch, 60, 35);
