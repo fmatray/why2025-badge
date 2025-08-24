@@ -12,7 +12,7 @@
 #include "cJSON.h"
 
 #include "badge.h"
-#include "ui.h"
+#include "ui/ui.h"
 
 #define REST_CHECK(a, str, goto_tag, ...)                                              \
     do                                                                                 \

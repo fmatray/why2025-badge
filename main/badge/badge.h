@@ -16,7 +16,7 @@
 #include "wifi.h"
 #include "httpd.h"
 #include "sync.h"
-#include "ui.h"
+#include "ui/ui.h"
 
 #define SETTINGS_FILE "/data/settings.json"
 #define DEFAULT_FILE "/data/default.json"

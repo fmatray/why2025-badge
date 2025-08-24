@@ -34,6 +34,8 @@
         "stdio.h": "c",
         "badge.h": "c",
         "esp_netif_ip_addr.h": "c",
-        "button.h": "c"
+        "button.h": "c",
+        "radar.C": "cpp",
+        "lvgl.h": "c"
     }
 }
