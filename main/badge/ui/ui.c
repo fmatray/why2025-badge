@@ -79,9 +79,13 @@ void ui_task(void *arg) {
   SemaphoreHandle_t xGuiSemaphore;
   xGuiSemaphore = xSemaphoreCreateMutex();
 
+  ESP_LOGI(__FILE__, "LVGL INIT");
   lv_init();
+
+  ESP_LOGI(__FILE__, "DRIVERS INIT");
   lvgl_driver_init();
 
+  ESP_LOGI(__FILE__, "BUFFERS INIT");
   lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(
       DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA);
   lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(
@@ -97,6 +101,8 @@ void ui_task(void *arg) {
   disp_drv.draw_buf = &disp_buf;
   lv_disp_drv_register(&disp_drv);
 
+
+  ESP_LOGI(__FILE__, "LVGL READY");
   const esp_timer_create_args_t periodic_timer_args = {
       .callback = &ui_tick_task,
       .name = "ui_tick_task",
