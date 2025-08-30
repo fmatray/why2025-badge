@@ -2,6 +2,7 @@ execute_process(COMMAND git log --pretty=format:'%h' -n 1
                 OUTPUT_VARIABLE GIT_REV
                 ERROR_QUIET)
 
+
 # Check whether we got any revision (which isn't
 # always the case, e.g. when someone downloaded a zip
 # file from Github instead of a checkout)
@@ -44,5 +45,9 @@ endif()
 
 FILE(GLOB_RECURSE app_sources ${CMAKE_SOURCE_DIR}/main/main.c ${CMAKE_SOURCE_DIR}/main/badge/*.*)
 
-idf_component_register(SRCS ${app_sources})
+idf_component_register(
+    SRCS ${app_sources} 
+    REQUIRES esp_lcd esp-bsp
+    PRIV_REQUIRES esp_lcd esp-bsp
+)
 #spiffs_create_partition_image(storage ${DATA_SRC_DIR} FLASH_IN_PROJECT)

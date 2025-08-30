@@ -36,6 +36,15 @@
         "esp_netif_ip_addr.h": "c",
         "button.h": "c",
         "radar.C": "cpp",
-        "lvgl.h": "c"
+        "lvgl.h": "c",
+        "task.h": "c",
+        "esp_lcd_panel_ops.h": "c",
+        "rssi.h": "c",
+        "splash.h": "c",
+        "lv_types.h": "c",
+        "esp_lcd_types.h": "c",
+        "esp_lcd_panel_io.h": "c",
+        "esp_lvgl_port.h": "c",
+        "esp_lcd_panel_vendor.h": "c"
     }
 }

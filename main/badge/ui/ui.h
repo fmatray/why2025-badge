@@ -4,14 +4,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "lvgl.h"
-#include "lvgl_helpers.h"
+#include <lvgl.h>
+//#include "lvgl_helpers.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
 
 #include "../badge.h"
+#include "lcd.h"
+
 #include "admin.h"
 #include "event.h"
 #include "person.h"
