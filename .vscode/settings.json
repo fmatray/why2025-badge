@@ -36,6 +36,8 @@
         "esp_netif_ip_addr.h": "c",
         "button.h": "c",
         "radar.C": "cpp",
-        "lvgl.h": "c"
+        "lvgl.h": "c",
+        "lv_image.h": "c",
+        "lv_conf_internal.h": "c"
     }
 }
