@@ -54,7 +54,7 @@ void ui_switch_page_up() {
 }
 
 static void ui_init(void) {
-  current_screen = SCREEN_LOGO;
+  current_screen = SCREEN_PERSON;
 
   screens[SCREEN_LOGO] = ui_screen_splash_init();
   screens[SCREEN_PERSON] = ui_screen_person_init();
@@ -79,7 +79,7 @@ void ui_task(void *arg) {
   SemaphoreHandle_t xGuiSemaphore;
   xGuiSemaphore = xSemaphoreCreateMutex();
 
-  lv_init();
+  lcd_init();
 //  lvgl_driver_init();
 
 /*  lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA);
@@ -119,7 +119,6 @@ void ui_task(void *arg) {
     }
   }
 
-  //free(buf1);
-  //free(buf2);
+  lcd_free();
   vTaskDelete(NULL);
 }
