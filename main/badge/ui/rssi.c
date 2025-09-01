@@ -1,5 +1,8 @@
 #include "rssi.h"
 
+lv_timer_t *rssi_timer_handle;
+lv_obj_t *screen_rssi;
+
 static lv_obj_t *table_rssi;
 
 static void ui_rssi_timer(lv_timer_t *arg) {

@@ -1,4 +1,5 @@
-#ifndef _ADMIN_HC
+#pragma once
+#ifndef _ADMIN_H
 #define _ADMIN_H
 
 #include <stdio.h>

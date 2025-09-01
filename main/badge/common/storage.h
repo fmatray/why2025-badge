@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __SPIFFS_H__
 #define __SPIFFS_H__
 

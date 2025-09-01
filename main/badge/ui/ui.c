@@ -1,5 +1,11 @@
 #include "ui.h"
 #include "../led.h"
+#include "esp_log.h"
+
+#define TAG ("LVGL")
+
+lv_obj_t *screens[NUM_SCREENS];
+int8_t current_screen;
 
 void restore_current_timer() {
   if (current_screen == SCREEN_RSSI)
@@ -33,8 +39,8 @@ void ui_switch_page_down() {
   ESP_LOGI("DISPLAY", "DISPLAY COUNTER: %d/%d", current_screen + 1,
            NUM_SCREENS);
 
-  lv_scr_load_anim(screens[current_screen], LV_SCR_LOAD_ANIM_OVER_TOP, 300, 0,
-                   false);
+  lv_screen_load_anim(screens[current_screen], LV_SCR_LOAD_ANIM_OVER_TOP, 300,
+                      0, false);
 
   restore_current_timer();
 }
@@ -47,30 +53,64 @@ void ui_switch_page_up() {
   ESP_LOGI("DISPLAY", "DISPLAY COUNTER: %d/%d", current_screen + 1,
            NUM_SCREENS);
 
-  lv_scr_load_anim(screens[current_screen], LV_SCR_LOAD_ANIM_OVER_BOTTOM, 300,
-                   0, false);
+  lv_screen_load_anim(screens[current_screen], LV_SCR_LOAD_ANIM_OVER_BOTTOM,
+                      300, 0, false);
 
   restore_current_timer();
 }
 
 static void ui_init(void) {
-  current_screen = SCREEN_PERSON;
+  ESP_LOGI(__FILE__, "UI Initialization");
+  lv_obj_t *scr = lv_display_get_screen_active(display);
 
-  screens[SCREEN_LOGO] = ui_screen_splash_init();
-  screens[SCREEN_PERSON] = ui_screen_person_init();
-  screens[SCREEN_SOCIALENERGY] = ui_screen_socialenergy_init();
-  screens[SCREEN_EVENT] = ui_screen_event_init();
-  screens[SCREEN_RADAR] = ui_screen_radar_init();
-  screens[SCREEN_RSSI] = ui_screen_rssi_init();
-  screens[SCREEN_ADMIN] = ui_screen_admin_init();
-  screens[SCREEN_SNAKE] = ui_screen_snake_init();
+  LV_IMG_DECLARE(img_logo);
 
-  // show first page.
-  lv_scr_load(screens[current_screen]);
-
-  // Turn on backlight and run backlight management task
+  lv_obj_t *logo = lv_img_create(scr);
+  lv_img_set_src(logo, &img_logo);
+  lv_obj_align(logo, LV_ALIGN_CENTER, 0, 0);
   ui_update_backlight(true);
   backlight_init();
+  ESP_LOGI(__FILE__, "UI Initialization done");
+  return;
+
+  current_screen = SCREEN_LOGO;
+
+  screens[SCREEN_LOGO] = ui_screen_splash_init();
+  /*  screens[SCREEN_PERSON] = ui_screen_person_init();
+    screens[SCREEN_SOCIALENERGY] = ui_screen_socialenergy_init();
+    screens[SCREEN_EVENT] = ui_screen_event_init();
+    screens[SCREEN_RADAR] = ui_screen_radar_init();
+    screens[SCREEN_RSSI] = ui_screen_rssi_init();
+    screens[SCREEN_ADMIN] = ui_screen_admin_init();
+    screens[SCREEN_SNAKE] = ui_screen_snake_init();*/
+
+  // show first page.
+  lv_screen_load(screens[current_screen]);
+
+  // Turn on backlight and run backlight management task
+}
+
+void log_callback(lv_log_level_t level, const char *buf) {
+
+  switch (level) {
+  case LV_LOG_LEVEL_TRACE:
+    ESP_LOGV(TAG, "%s", buf);
+    break;
+  case LV_LOG_LEVEL_USER:
+  case LV_LOG_LEVEL_INFO:
+    ESP_LOGI(TAG, "%s", buf);
+    break;
+  case LV_LOG_LEVEL_WARN:
+    ESP_LOGW(TAG, "%s", buf);
+    break;
+  case LV_LOG_LEVEL_ERROR:
+    ESP_LOGE(TAG, "%s", buf);
+    break;
+  case LV_LOG_LEVEL_NONE: // do nothing
+    break;
+  default:
+    break;
+  }
 }
 
 static void ui_tick_task(void *arg) { lv_tick_inc(1); }
@@ -80,23 +120,24 @@ void ui_task(void *arg) {
   xGuiSemaphore = xSemaphoreCreateMutex();
 
   lcd_init();
-//  lvgl_driver_init();
+  lv_log_register_print_cb(log_callback);
+  //  lvgl_driver_init();
 
-/*  lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA);
-  lv_color_t *buf2 = (lv_color_t *)heap_caps_malloc(
-      DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA);
+  /*  lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(DISP_BUF_SIZE *
+    sizeof(lv_color_t), MALLOC_CAP_DMA); lv_color_t *buf2 = (lv_color_t
+    *)heap_caps_malloc( DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_DMA);
 
-  static lv_disp_draw_buf_t disp_buf;
-  uint32_t size_in_px = DISP_BUF_SIZE;
+    static lv_disp_draw_buf_t disp_buf;
+    uint32_t size_in_px = DISP_BUF_SIZE;
 
-  lv_disp_draw_buf_init(&disp_buf, buf1, buf2, size_in_px);
-  lv_disp_drv_t disp_drv;
-  lv_disp_drv_init(&disp_drv);
-  disp_drv.flush_cb = disp_driver_flush;
-  disp_drv.draw_buf = &disp_buf;
-  lv_disp_drv_register(&disp_drv);
-*/
+    lv_disp_draw_buf_init(&disp_buf, buf1, buf2, size_in_px);
 
+    lv_disp_drv_t disp_drv;
+    lv_disp_drv_init(&disp_drv);
+    disp_drv.flush_cb = disp_driver_flush;
+    disp_drv.draw_buf = &disp_buf;
+    lv_disp_drv_register(&disp_drv);
+  */
 
   const esp_timer_create_args_t periodic_timer_args = {
       .callback = &ui_tick_task,
@@ -108,6 +149,7 @@ void ui_task(void *arg) {
 
   ui_init();
 
+  ESP_LOGI(__FILE__, "Starting UI main loop");
   while (1) {
     /* Delay 1 tick (assumes FreeRTOS tick is 10ms */
     vTaskDelay(pdMS_TO_TICKS(10));

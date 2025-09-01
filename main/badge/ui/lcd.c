@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: CC0-1.0
  */
 
-#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
-
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #include "esp_err.h"
@@ -22,18 +20,10 @@
 #include <sys/param.h>
 #include <unistd.h>
 
-#define BYTES_PER_PIXEL (LV_COLOR_FORMAT_GET_SIZE(LV_COLOR_FORMAT_RGB888))
-
 // Using SPI2 in the example
 #define LCD_HOST SPI2_HOST
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////// Please update the following configuration according to your
-/// LCD spec //////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define LCD_PIXEL_CLOCK_HZ (40 * 1000 * 1000)
-#define LCD_BK_LIGHT_ON_LEVEL 0
-#define LCD_BK_LIGHT_OFF_LEVEL !LCD_BK_LIGHT_ON_LEVEL
 #define PIN_NUM_SCLK 6
 #define PIN_NUM_MOSI 7
 #define PIN_NUM_MISO 2
@@ -42,16 +32,18 @@
 #define PIN_NUM_LCD_CS 10
 
 // The pixel number in horizontal and vertical
-#define LCD_H_RES 240
-#define LCD_V_RES 320
+#define LCD_H_RES 320
+#define LCD_V_RES 240
 // Bit number used to represent command and parameter
 #define LCD_CMD_BITS 8
 #define LCD_PARAM_BITS 8
 
-// LVGL library is not thread-safe, this example will call LVGL APIs from
-// different tasks, so use a mutex to protect it
-uint8_t buf1[320 * 240 / 10 * BYTES_PER_PIXEL];
-uint8_t buf2[320 * 240 / 10 * BYTES_PER_PIXEL];
+#define BYTES_PER_PIXEL (LV_COLOR_FORMAT_GET_SIZE(LV_COLOR_FORMAT_RGB565))
+#define DRAW_BUF_SIZE (LCD_H_RES * LCD_V_RES / 10 * BYTES_PER_PIXEL)
+
+lv_display_t *display;
+uint8_t buf1[DRAW_BUF_SIZE];
+// uint8_t buf2[DRAW_BUF_SIZE];
 
 lv_display_t *display = NULL;
 
@@ -64,52 +56,26 @@ static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io,
   return false;
 }
 
-/* Rotate display and touch, when rotated screen in LVGL. Called when driver
- * parameters are updated. */
-static void lvgl_port_update_callback(lv_display_t *disp) {
-  esp_lcd_panel_handle_t panel_handle = lv_display_get_user_data(disp);
-  lv_display_rotation_t rotation = lv_display_get_rotation(disp);
-
-  switch (rotation) {
-  case LV_DISPLAY_ROTATION_0:
-    // Rotate LCD display
-    esp_lcd_panel_swap_xy(panel_handle, false);
-    esp_lcd_panel_mirror(panel_handle, true, false);
-    break;
-  case LV_DISPLAY_ROTATION_90:
-    // Rotate LCD display
-    esp_lcd_panel_swap_xy(panel_handle, true);
-    esp_lcd_panel_mirror(panel_handle, true, true);
-    break;
-  case LV_DISPLAY_ROTATION_180:
-    // Rotate LCD display
-    esp_lcd_panel_swap_xy(panel_handle, false);
-    esp_lcd_panel_mirror(panel_handle, false, true);
-    break;
-  case LV_DISPLAY_ROTATION_270:
-    // Rotate LCD display
-    esp_lcd_panel_swap_xy(panel_handle, true);
-    esp_lcd_panel_mirror(panel_handle, false, false);
-    break;
-  }
-}
-
 static void lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area,
                           uint8_t *px_map) {
-
   ESP_LOGI(__FILE__, "lvgl_flush_cb");
+  assert(px_map != NULL);
   // lvgl_port_update_callback(disp);
   esp_lcd_panel_handle_t panel_handle = lv_display_get_user_data(disp);
+  ESP_LOGI(__FILE__, "lvgl_flush_cb : 1");
   int offsetx1 = area->x1;
   int offsetx2 = area->x2;
   int offsety1 = area->y1;
   int offsety2 = area->y2;
   // because SPI LCD is big-endian, we need to swap the RGB bytes order
+  ESP_LOGI(__FILE__, "lvgl_flush_cb : 2");
   lv_draw_sw_rgb565_swap(px_map,
                          (offsetx2 + 1 - offsetx1) * (offsety2 + 1 - offsety1));
+  ESP_LOGI(__FILE__, "lvgl_flush_cb : 3");
   // copy a buffer's content to a specific area of the display
-  esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1,
-                            offsety2 + 1, px_map);
+  ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(
+      panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, px_map));
+  ESP_LOGI(__FILE__, "lvgl_flush_cb: DONE");
 }
 
 void lcd_init(void) {
@@ -161,6 +127,7 @@ void lcd_init(void) {
   ESP_LOGI(__FILE__, "Initialize LVGL library");
   lv_init();
 
+  ESP_LOGI(__FILE__, "LVGL create display");
   // create a lvgl display
   display = lv_display_create(LCD_H_RES, LCD_V_RES);
 
@@ -169,10 +136,18 @@ void lcd_init(void) {
   // 1/10 screen sized
 
   // initialize LVGL draw buffers
-  lv_display_set_buffers(display, buf1, buf2, sizeof(buf1),
+  ESP_LOGI(__FILE__, "Initializating buffers");
+
+  lv_color_format_t cf = lv_display_get_color_format(display);
+  uint32_t w = lv_display_get_original_horizontal_resolution(display);
+  uint32_t h = lv_display_get_original_vertical_resolution(display);
+  uint32_t stride = lv_draw_buf_width_to_stride(w, cf);
+
+  ESP_LOGI(__FILE__, "cf: %d  w: %d  h:%d stride: %d. buff_size:%d", cf, w, h,
+           stride, sizeof(buf1));
+  lv_display_set_buffers(display, buf1, NULL, sizeof(buf1),
                          LV_DISPLAY_RENDER_MODE_PARTIAL);
 
-                         
   // associate the mipi panel handle to the display
   lv_display_set_user_data(display, panel_handle);
   // set color depth
@@ -190,6 +165,7 @@ void lcd_init(void) {
   /* Register done callback */
   ESP_ERROR_CHECK(
       esp_lcd_panel_io_register_event_callbacks(io_handle, &cbs, display));
+  ESP_LOGI(__FILE__, "LCD INIT DONE");
 }
 
 void lcd_free(){};

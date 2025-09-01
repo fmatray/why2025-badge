@@ -1,6 +1,7 @@
 #include "backlight.h"
 #include "../led.h"
 
+lv_timer_t *backlight_timer_handle;
 static uint32_t last_trigger = -1;
 
 /*

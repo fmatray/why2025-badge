@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _BACKLIGHT_H
 #define _BACKLIGHT_H
 
@@ -13,7 +14,7 @@
 #define BRIGHT_OFF_TIMEOUT_MS 15000
 
 
-lv_timer_t *backlight_timer_handle;
+extern lv_timer_t *backlight_timer_handle;
 
 bool ui_update_backlight(bool trigger);
 void backlight_init();

@@ -1,5 +1,8 @@
 #include "radar.h"
 
+lv_timer_t *radar_timer_handle;
+lv_obj_t *screen_radar;
+
 static lv_obj_t *radar_node[MAX_NEARBY_NODE] = {0};
 static lv_obj_t *radar_node_number[MAX_NEARBY_NODE] = {0};
 

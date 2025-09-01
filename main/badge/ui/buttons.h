@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef _BUTTONS_H
 #define _BUTTONS_H
 

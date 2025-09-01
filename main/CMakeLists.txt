@@ -47,7 +47,7 @@ FILE(GLOB_RECURSE app_sources ${CMAKE_SOURCE_DIR}/main/main.c ${CMAKE_SOURCE_DIR
 
 idf_component_register(
     SRCS ${app_sources} 
-    REQUIRES esp_lcd
-    PRIV_REQUIRES esp_lcd
+    REQUIRES esp_lcd esp_driver_rmt
+    PRIV_REQUIRES esp_lcd esp_driver_rmt
 )
 #spiffs_create_partition_image(storage ${DATA_SRC_DIR} FLASH_IN_PROJECT)

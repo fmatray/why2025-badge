@@ -1,3 +1,4 @@
+#pragma once
 #ifndef SOCIALENERGY_H
 #define SOCIALENERGY_H
 

@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _SPLASH_H
 #define _SPLASH_H
 #include <lvgl.h>

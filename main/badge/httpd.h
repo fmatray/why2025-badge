@@ -1,3 +1,4 @@
+#pragma once
 #ifndef __HTTPD_H
 #define __HTTPD_H
 #include <stdio.h>
